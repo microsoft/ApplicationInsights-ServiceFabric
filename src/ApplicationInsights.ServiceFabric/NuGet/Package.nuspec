@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Microsoft.ApplicationInsights.ServiceFabric</id>
+    <version>$version$</version>
+    <title>Application Insights Service Fabric Collector</title>
+    <authors>$author$</authors>
+    <owners>$author$</owners>
+    <licenseUrl>http://go.microsoft.com/fwlink/?LinkID=510709</licenseUrl>
+    <projectUrl>http://go.microsoft.com/fwlink/?LinkId=392727</projectUrl>
+    <iconUrl>$image$</iconUrl>
+    <requireLicenseAcceptance>true</requireLicenseAcceptance>
+    <description>Application Insights module for service fabric applications. This package provides automatic decoration of telemetry with the service fabric context the application is running in. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</description>
+    <summary>Application Insights module for service fabric provides automatic context decoration on outgoing telemetry.</summary>
+    <copyright>$copyright$</copyright>
+    <!-- To be updated -->
+    <releaseNotes>For the release notes please follow http://go.microsoft.com/fwlink/?LinkId=535037</releaseNotes>
+    <tags>Analytics ApplicationInsights Telemetry AppInsights</tags>
+    <dependencies>
+      <group targetFramework="net45">
+        <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
+        <dependency id="Microsoft.ServiceFabric" version="5.5.216" />
+      </group>
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.config.transform" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.config.install.xdt" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.config.uninstall.xdt" target="content" />
+
+    <!-- For .NET 4.5 projects -->
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.dll" target="lib\net45" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.pdb" target="lib\net45" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.xml" target="lib\net45" />
+  </files>
+</package>

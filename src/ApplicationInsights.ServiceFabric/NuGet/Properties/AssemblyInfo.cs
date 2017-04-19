@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("ApplicationInsights.ServiceFabric.Net45")]
+[assembly: AssemblyTitle("ApplicationInsights.ServiceFabric.NuGet")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("ApplicationInsights.ServiceFabric.Net45")]
+[assembly: AssemblyProduct("ApplicationInsights.ServiceFabric.NuGet")]
 [assembly: AssemblyCopyright("Copyright ©  2017")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("00a7f547-e1d1-48b7-a5a5-0a5e061f9fc1")]
+[assembly: Guid("d8254b60-5bc4-402d-b657-8adb48fcbd79")]
 
 // Version information for an assembly consists of the following four values:
 //
