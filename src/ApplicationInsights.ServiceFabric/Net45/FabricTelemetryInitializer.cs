@@ -1,9 +1,11 @@
 ﻿namespace Microsoft.ApplicationInsights.ServiceFabric
 {
-    using System.Collections.Generic;
+    using System;
+	using System.Collections.Generic;
     using System.Fabric;
     using System.Globalization;
     using System.Runtime.Remoting.Messaging;
+	using System.Text;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
 
@@ -98,6 +100,28 @@
                         }
                     }
                 }
+
+                // Fallback to environment variables for setting role / instance names. We will rely on these environment variables exclusively for container lift and shift scenarios for now.
+                // And for reliable services, when service context is neither provided directly nor through call context
+                if(string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
+                {
+                    telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageName);
+                }
+                
+                if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
+                {
+                    telemetry.Context.Cloud.RoleInstance = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageActivatonId) ?? Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageInstanceId);
+                }
+
+                if (!telemetry.Context.Properties.ContainsKey(KnownContextFieldNames.NodeName))
+                {
+                    string nodeName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.NodeName);
+
+                    if (!string.IsNullOrEmpty(nodeName))
+                    {
+                        telemetry.Context.Properties.Add(KnownContextFieldNames.NodeName, nodeName);
+                    }
+                }
             }
             catch
             {
@@ -138,14 +162,22 @@
 
         private class KnownContextFieldNames
         {
-            public const string ServiceName = "ServiceName";
-            public const string ServiceTypeName = "ServiceTypeName";
-            public const string PartitionId = "PartitionId";
-            public const string ApplicationName = "ApplicationName";
-            public const string ApplicationTypeName = "ApplicationTypeName";
-            public const string NodeName = "NodeName";
-            public const string InstanceId = "InstanceId";
-            public const string ReplicaId = "ReplicaId";
+            public const string ServiceName = "ServiceFabric.ServiceName";
+            public const string ServiceTypeName = "ServiceFabric.ServiceTypeName";
+            public const string PartitionId = "ServiceFabric.PartitionId";
+            public const string ApplicationName = "ServiceFabric.ApplicationName";
+            public const string ApplicationTypeName = "ServiceFabric.ApplicationTypeName";
+            public const string NodeName = "ServiceFabric.NodeName";
+            public const string InstanceId = "ServiceFabric.InstanceId";
+            public const string ReplicaId = "ServiceFabric.ReplicaId";
+        }
+
+        private class KnownEnvironmentVariableName
+        {
+            public const string ServicePackageName = "Fabric_ServicePackageName";
+            public const string ServicePackageInstanceId = "Fabric_ServicePackageInstanceId";
+            public const string ServicePackageActivatonId = "Fabric_ServicePackageActivationId";
+            public const string NodeName = "Fabric_NodeName";
         }
     }
 }
