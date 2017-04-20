@@ -2,6 +2,7 @@
 {
     using System.Collections.Generic;
     using System.Fabric;
+    using System.Globalization;
     using System.Runtime.Remoting.Messaging;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
@@ -123,12 +124,12 @@
                 result.Add(KnownContextFieldNames.NodeName, context.NodeContext.NodeName);
                 if (context is StatelessServiceContext)
                 {
-                    result.Add(KnownContextFieldNames.InstanceId, context.ReplicaOrInstanceId.ToString());
+                    result.Add(KnownContextFieldNames.InstanceId, context.ReplicaOrInstanceId.ToString(CultureInfo.InvariantCulture));
                 }
 
                 if (context is StatefulServiceContext)
                 {
-                    result.Add(KnownContextFieldNames.ReplicaId, context.ReplicaOrInstanceId.ToString());
+                    result.Add(KnownContextFieldNames.ReplicaId, context.ReplicaOrInstanceId.ToString(CultureInfo.InvariantCulture));
                 }
             }
 

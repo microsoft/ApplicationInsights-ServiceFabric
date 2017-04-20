@@ -17,11 +17,11 @@
       <FileWrites Include="$(PackageOutputDir)\$(PackageId)*.symbols.nupkg" Condition="'$(PackageSymbols)' == 'True'"/>
     </ItemGroup>
   </Target>
-  
+
   <!-- This target runs after build to guarantee that all dependent files have already been copied to output directory. -->
   <Target Name="BuildNugetPackage" AfterTargets="Build">
     <Error Condition="!Exists('$(PackageVersionFile)')" Text="PackageVersionFile must be a valid path to a .dll file that defines NuGet package version information."/>
-    
+
     <!-- Extract package properties from the .dll file -->
     <GetFileVersionInfo File="$(PackageVersionFile)">
       <Output TaskParameter="VersionInfo" ItemName="VersionInfo" />
@@ -38,15 +38,12 @@
 
     <!-- Make sure package output directory exists (expected by NuGet). -->
     <MakeDir Directories="$(PackageOutputDir)"/>
-    
+
     <!-- Generate .nupkg file -->
     <Error Condition="'$(CoreSdkVersion)' == ''" Text="CoreSdkVersion property must be a valid version of Core SDK included in Directory.Build.props."/>
-    <Exec Command="$(PackageCommand)" ConsoleToMSBuild="true">          
-        <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />      
-    </Exec>  
-</Target>
-    <Target Name="Gitlink" AfterTargets="Build" BeforeTargets="BuildNugetPackage">
-        <Exec Command='$(PackagesDir)\gitlink.2.2.0\lib\net45\GitLink.exe $(MSBuildThisFileDirectory) -f "Src\Microsoft.ApplicationInsights.Web.sln" -u https://github.com/Microsoft/ApplicationInsights-server-dotnet -c "$(Configuration)" -p "$(Platform)"' IgnoreExitCode='true' />
+    <Exec Command="$(PackageCommand)" ConsoleToMSBuild="true">
+      <Output TaskParameter="ConsoleOutput" PropertyName="OutputOfExec" />
+    </Exec>
   </Target>
   <UsingTask TaskName="GetFileVersionInfo" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildFrameworkToolsPath)\Microsoft.Build.Tasks.v4.0.dll">
     <ParameterGroup>
@@ -63,15 +60,15 @@
           this.VersionInfo = new TaskItem(this.File);
           this.VersionInfo.SetMetadata("Comments", versionInfo.Comments);
           this.VersionInfo.SetMetadata("CompanyName", versionInfo.CompanyName);
-          this.VersionInfo.SetMetadata("FileMajorPart", versionInfo.FileMajorPart.ToString());          
-          this.VersionInfo.SetMetadata("FileMinorPart", versionInfo.FileMinorPart.ToString());          
+          this.VersionInfo.SetMetadata("FileMajorPart", versionInfo.FileMajorPart.ToString()); 
+          this.VersionInfo.SetMetadata("FileMinorPart", versionInfo.FileMinorPart.ToString()); 
           this.VersionInfo.SetMetadata("FileBuildPart", versionInfo.FileBuildPart.ToString()); 
-          this.VersionInfo.SetMetadata("FilePrivatePart", versionInfo.FilePrivatePart.ToString().PadLeft(5,'0'));         
+          this.VersionInfo.SetMetadata("FilePrivatePart", versionInfo.FilePrivatePart.ToString().PadLeft(5,'0')); 
           this.VersionInfo.SetMetadata("LegalCopyright", versionInfo.LegalCopyright);
           this.VersionInfo.SetMetadata("ProductName", versionInfo.ProductName);
         ]]>
       </Code>
     </Task>
   </UsingTask>
-  
+
 </Project>
