@@ -17,8 +17,6 @@
     {
         private const string ServiceContextKeyName = "AI.SF.ServiceContext";
 
-        private Dictionary<string, string> contextCollection;
-
         /// <summary>
         /// There are a few ways the context could be provided. This property makes it easy for the rest of the implemenatation to ignore all those cases. 
         /// </summary>
