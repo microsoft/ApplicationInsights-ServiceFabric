@@ -21,6 +21,9 @@
         <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
         <dependency id="Microsoft.ServiceFabric" version="5.5.216" />
       </group>
+      <group targetFramework="netstandard1.3">
+        <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
+      </group>
     </dependencies>
   </metadata>
   <files>
@@ -32,5 +35,10 @@
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.dll" target="lib\net45" />
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.pdb" target="lib\net45" />
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.xml" target="lib\net45" />
+
+    <!--For NetStandard1.3-->
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NetStandard\netstandard1.3\Microsoft.AI.ServiceFabric.dll" target="lib\netstandard1.3" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NetStandard\netstandard1.3\Microsoft.AI.ServiceFabric.pdb" target="lib\netstandard1.3" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NetStandard\netstandard1.3\Microsoft.AI.ServiceFabric.xml" target="lib\netstandard1.3" />
   </files>
 </package>
