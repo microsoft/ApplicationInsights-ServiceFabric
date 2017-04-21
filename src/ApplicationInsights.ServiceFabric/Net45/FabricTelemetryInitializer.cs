@@ -8,8 +8,6 @@
 
     public partial class FabricTelemetryInitializer
     {
-        private Dictionary<string, string> contextCollection;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
         /// </summary>
