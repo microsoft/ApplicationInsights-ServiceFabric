@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Microsoft.ApplicationInsights.ServiceFabric.NuGet</RootNamespace>
     <AssemblyName>Microsoft.ApplicationInsights.ServiceFabric.NuGet</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.6.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <!-- Suppress the "CS2008: No source files specified" warning -->
     <NoWarn>2008</NoWarn>

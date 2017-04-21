@@ -6,6 +6,10 @@ MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Net45", "ApplicationInsights.ServiceFabric\Net45\ApplicationInsights.ServiceFabric.Net45.csproj", "{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.NuGet", "ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.ServiceFabric.NuGet.csproj", "{D8254B60-5BC4-402D-B657-8ADB48FCBD79}"
+	ProjectSection(ProjectDependencies) = postProject
+		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1} = {00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}
+		{A14C1A81-A954-45EB-B985-D14A109233F6} = {A14C1A81-A954-45EB-B985-D14A109233F6}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.NetStandard", "ApplicationInsights.ServiceFabric\NetStandard\ApplicationInsights.ServiceFabric.NetStandard.csproj", "{A14C1A81-A954-45EB-B985-D14A109233F6}"
 EndProject
