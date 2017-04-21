@@ -1,15 +1,15 @@
 ﻿namespace Microsoft.ApplicationInsights.ServiceFabric
 {
     using System;
-	using System.Collections.Generic;
-#if !NETCORE
-    using System.Fabric;
-#endif
+    using System.Collections.Generic;
     using System.Globalization;
-    using System.Runtime.Remoting.Messaging;
-	using System.Text;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
+#if !NETCORE
+    using System.Fabric;
+    using System.Runtime.Remoting.Messaging;
+	using System.Text;
+#endif
 
     /// <summary>
     /// Telemetry initializer for service fabric. Adds service fabric specific context to outgoing telemetry.
@@ -52,11 +52,12 @@
         }
 #endif
 
+
         /// <summary>
         /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
         /// </summary>
         public FabricTelemetryInitializer()
-        {}
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
@@ -81,6 +82,7 @@
             CallContext.LogicalSetData(ServiceContextKeyName, GetContextContractDictionaryFromServiceContext(context));
         }
 #endif
+
 
         /// <summary>
         /// Adds service fabric context fields on the given telemetry object.
@@ -119,11 +121,11 @@
 
                 // Fallback to environment variables for setting role / instance names. We will rely on these environment variables exclusively for container lift and shift scenarios for now.
                 // And for reliable services, when service context is neither provided directly nor through call context
-                if(string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
+                if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
                 {
                     telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageName);
                 }
-                
+
                 if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
                 {
                     telemetry.Context.Cloud.RoleInstance = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageActivatonId) ?? Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageInstanceId);
@@ -151,7 +153,7 @@
         /// </summary>
         /// <param name="context">An object of type <see cref="ServiceContext" />.</param>
         /// <returns>A dictionary that encapsulates the given context.</returns>
-        private static Dictionary<string,string> GetContextContractDictionaryFromServiceContext(ServiceContext context)
+        private static Dictionary<string, string> GetContextContractDictionaryFromServiceContext(ServiceContext context)
         {
             Dictionary<string, string> result = new Dictionary<string, string>();
 
