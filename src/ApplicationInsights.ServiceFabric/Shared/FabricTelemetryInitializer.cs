@@ -2,19 +2,18 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
+
 #if !NETCORE
     using System.Fabric;
     using System.Runtime.Remoting.Messaging;
-	using System.Text;
 #endif
 
     /// <summary>
     /// Telemetry initializer for service fabric. Adds service fabric specific context to outgoing telemetry.
     /// </summary>
-    public class FabricTelemetryInitializer : ITelemetryInitializer
+    public partial class FabricTelemetryInitializer : ITelemetryInitializer
     {
         private const string ServiceContextKeyName = "AI.SF.ServiceContext";
 
@@ -27,6 +26,10 @@
         {
             get
             {
+#if NETCORE
+                return null;
+#else
+
                 if (this.contextCollection != null)
                 {
                     return this.contextCollection;
@@ -37,21 +40,9 @@
                 //{
                 //    return fromCallContext;
                 //}
+#endif
             }
         }
-
-#if !NETCORE
-        /// <summary>
-        /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
-        /// </summary>
-        /// <param name="context">a service context object.</param>
-        public FabricTelemetryInitializer(ServiceContext context)
-        {
-            // Clone the originally passed in dictionary entries. We don't want to hold the original dictionary reference because the user may add / remove from it etc. and that would result in weird changes.
-            this.contextCollection = GetContextContractDictionaryFromServiceContext(context);
-        }
-#endif
-
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
@@ -67,22 +58,6 @@
             // Clone the passed in context.
             this.contextCollection = new Dictionary<string, string>(context);
         }
-
-#if !NETCORE
-        /// <summary>
-        /// This static method is a helper method that anyone can invoke to set the call context.
-        /// This provides a way for the user to add a single line of code at the entry point and get collected telemetry augmented with service fabric specific fields.
-        /// </summary>
-        /// <param name="context">A service context object.</param>
-        public static void SetServiceCallContext(ServiceContext context)
-        {
-            // The call initializes TelemetryConfiguration that will create and Intialize modules.
-            TelemetryConfiguration configuration = TelemetryConfiguration.Active;
-
-            CallContext.LogicalSetData(ServiceContextKeyName, GetContextContractDictionaryFromServiceContext(context));
-        }
-#endif
-
 
         /// <summary>
         /// Adds service fabric context fields on the given telemetry object.
@@ -147,6 +122,7 @@
             }
         }
 
+<<<<<<< HEAD
 #if !NETCORE
         /// <summary>
         /// Converts the context object to the loose dictionary based contract this initializer depends on for data.
@@ -180,6 +156,8 @@
         }
 #endif
 
+=======
+>>>>>>> 787a488... Resove the build
         private class KnownContextFieldNames
         {
             public const string ServiceName = "ServiceFabric.ServiceName";
