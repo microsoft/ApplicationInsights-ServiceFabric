@@ -15,6 +15,7 @@
     /// </summary>
     public partial class FabricTelemetryInitializer : ITelemetryInitializer
     {
+        // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric.Native\Net45\FabricTelemetryInitializerExtension.cs
         private const string ServiceContextKeyName = "AI.SF.ServiceContext";
 
         private Dictionary<string, string> contextCollection;
@@ -122,6 +123,7 @@
             }
         }
 
+        // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric.Native\Net45\FabricTelemetryInitializerExtension.cs
         private class KnownContextFieldNames
         {
             public const string ServiceName = "ServiceFabric.ServiceName";

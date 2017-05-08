@@ -6,15 +6,22 @@
     using System.Runtime.Remoting.Messaging;
     using Microsoft.ApplicationInsights.Extensibility;
 
-    public partial class FabricTelemetryInitializer
+    /// <summary>
+    /// Provides extended functionality related to the ServiceFabricTelemetryInitializer specifically targetted at Service Fabric Native applications.
+    /// </summary>
+    public static class FabricTelemetryInitializerExtension
     {
+        // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric\Shared\FabricTelemetryInitializer.cs
+        private const string ServiceContextKeyName = "AI.SF.ServiceContext";
+
         /// <summary>
-        /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
+        /// Creates an instance of the FabricTelemetryInitializer based on the Service Context passed in.
         /// </summary>
         /// <param name="context">a service context object.</param>
-        public FabricTelemetryInitializer(ServiceContext context)
+        /// <returns></returns>
+        public static FabricTelemetryInitializer CreateFabricTelemetryInitializer(ServiceContext context)
         {
-            this.contextCollection = GetContextContractDictionaryFromServiceContext(context);
+            return new FabricTelemetryInitializer(GetContextContractDictionaryFromServiceContext(context));
         }
 
         /// <summary>
@@ -59,6 +66,19 @@
             }
 
             return result;
+        }
+
+        // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric\Shared\FabricTelemetryInitializer.cs
+        private class KnownContextFieldNames
+        {
+            public const string ServiceName = "ServiceFabric.ServiceName";
+            public const string ServiceTypeName = "ServiceFabric.ServiceTypeName";
+            public const string PartitionId = "ServiceFabric.PartitionId";
+            public const string ApplicationName = "ServiceFabric.ApplicationName";
+            public const string ApplicationTypeName = "ServiceFabric.ApplicationTypeName";
+            public const string NodeName = "ServiceFabric.NodeName";
+            public const string InstanceId = "ServiceFabric.InstanceId";
+            public const string ReplicaId = "ServiceFabric.ReplicaId";
         }
     }
 }
