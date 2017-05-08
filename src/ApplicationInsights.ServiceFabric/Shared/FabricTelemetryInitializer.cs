@@ -6,7 +6,6 @@
     using Microsoft.ApplicationInsights.Extensibility;
 
 #if !NETCORE
-    using System.Fabric;
     using System.Runtime.Remoting.Messaging;
 #endif
 
