@@ -1,36 +1,54 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.9
+VisualStudioVersion = 15.0.26228.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Net45", "ApplicationInsights.ServiceFabric\Net45\ApplicationInsights.ServiceFabric.Net45.csproj", "{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.NuGet", "ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.ServiceFabric.NuGet.csproj", "{D8254B60-5BC4-402D-B657-8ADB48FCBD79}"
+	ProjectSection(ProjectDependencies) = postProject
+		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1} = {00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}
+		{A14C1A81-A954-45EB-B985-D14A109233F6} = {A14C1A81-A954-45EB-B985-D14A109233F6}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.NetStandard", "ApplicationInsights.ServiceFabric\NetStandard\ApplicationInsights.ServiceFabric.NetStandard.csproj", "{A14C1A81-A954-45EB-B985-D14A109233F6}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ApplicationInsights.ServiceFabric.Shared", "ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.shproj", "{782AB255-A812-4517-9BA7-191EDEBC0938}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Native", "ApplicationInsights.ServiceFabric.Native\Net45\ApplicationInsights.ServiceFabric.Native.csproj", "{D58E6722-7F75-43F2-B04A-30F5A571ED28}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Native.NuGet", "ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.ServiceFabric.Native.NuGet.csproj", "{820D2E4F-4D2F-463F-A1B3-778526936820}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems*{00a7f547-e1d1-48b7-a5a5-0a5e061f9fc1}*SharedItemsImports = 4
+		ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems*{782ab255-a812-4517-9ba7-191edebc0938}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Debug|x64 = Debug|x64
-		Release|Any CPU = Release|Any CPU
-		Release|x64 = Release|x64
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Release|Mixed Platforms = Release|Mixed Platforms
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Debug|x64.Build.0 = Debug|Any CPU
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Release|x64.ActiveCfg = Release|Any CPU
-		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Release|x64.Build.0 = Release|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Debug|x64.Build.0 = Debug|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Release|Any CPU.ActiveCfg = Debug|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Release|Any CPU.Build.0 = Debug|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Release|x64.ActiveCfg = Debug|Any CPU
-		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Release|x64.Build.0 = Debug|Any CPU
+		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D8254B60-5BC4-402D-B657-8ADB48FCBD79}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A14C1A81-A954-45EB-B985-D14A109233F6}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A14C1A81-A954-45EB-B985-D14A109233F6}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A14C1A81-A954-45EB-B985-D14A109233F6}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A14C1A81-A954-45EB-B985-D14A109233F6}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Release|Mixed Platforms.Build.0 = Release|x64
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Debug|Mixed Platforms.Build.0 = Debug|x64
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Release|Mixed Platforms.ActiveCfg = Release|x64
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Release|Mixed Platforms.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
