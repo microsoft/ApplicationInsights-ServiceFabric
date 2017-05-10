@@ -7,15 +7,15 @@
     <authors>$author$</authors>
     <owners>$author$</owners>
     <licenseUrl>http://go.microsoft.com/fwlink/?LinkID=510709</licenseUrl>
-    <projectUrl>http://go.microsoft.com/fwlink/?LinkId=392727</projectUrl>
+    <projectUrl>https://github.com/Microsoft/ApplicationInsights-servicefabric</projectUrl>
     <iconUrl>$image$</iconUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
-    <description>Application Insights module for service fabric applications. This package provides automatic decoration of telemetry with the service fabric context the application is running in. Do not use this nuget Native Service Fabric applications, use Microsoft.ApplicationInsights.ServiceFabric.Native package instead. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</description>
+    <description>Application Insights module for service fabric applications. This package provides automatic decoration of telemetry with the service fabric context the application is running in. Do not use this nuget for Native Service Fabric applications, use Microsoft.ApplicationInsights.ServiceFabric.Native package instead. Privacy statement: https://go.microsoft.com/fwlink/?LinkId=512156</description>
     <summary>Application Insights module for service fabric provides automatic context decoration on outgoing telemetry.</summary>
     <copyright>$copyright$</copyright>
     <!-- To be updated -->
-    <releaseNotes>For the release notes please follow http://go.microsoft.com/fwlink/?LinkId=535037</releaseNotes>
-    <tags>Analytics ApplicationInsights Telemetry AppInsights</tags>
+    <releaseNotes>For the release notes please follow https://github.com/Microsoft/ApplicationInsights-ServiceFabric/releases</releaseNotes>
+    <tags>Analytics ApplicationInsights Telemetry AppInsights ServiceFabric Fabric</tags>
     <dependencies>
       <group targetFramework="net45">
         <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
