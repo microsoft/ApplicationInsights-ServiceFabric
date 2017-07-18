@@ -5,6 +5,7 @@
     using System.Globalization;
     using System.Runtime.Remoting.Messaging;
     using Microsoft.ApplicationInsights.Extensibility;
+    using System;
 
     /// <summary>
     /// Provides extended functionality related to the ServiceFabricTelemetryInitializer specifically targetted at Service Fabric Native applications.
@@ -12,7 +13,7 @@
     public static class FabricTelemetryInitializerExtension
     {
         // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric\Shared\FabricTelemetryInitializer.cs
-        private const string ServiceContextKeyName = "AI.SF.ServiceContext";
+        private const string ServiceContextKeyName = "ServiceContext";
 
         /// <summary>
         /// Creates an instance of the FabricTelemetryInitializer based on the Service Context passed in.
@@ -29,14 +30,22 @@
         /// This provides a way for the user to add a single line of code at the entry point and get collected telemetry augmented with service fabric specific fields.
         /// </summary>
         /// <param name="context">A service context object.</param>
+        [Obsolete("This method is not required anymore. Service Fabric's reliable services and service remoting framework take care of setting the right context for you to consume.")]
         public static void SetServiceCallContext(ServiceContext context)
+        {
+            InitializeApplicationInsightsForServiceFabric();
+            CallContext.LogicalSetData(ServiceContextKeyName, GetContextContractDictionaryFromServiceContext(context));
+        }
+
+        /// <summary>
+        /// This static method initializes application initializes the modules for service fabric. 
+        /// </summary>
+        public static void InitializeApplicationInsightsForServiceFabric()
         {
             // The call initializes TelemetryConfiguration that will create and Intialize modules.
             TelemetryConfiguration configuration = TelemetryConfiguration.Active;
-
-            CallContext.LogicalSetData(ServiceContextKeyName, GetContextContractDictionaryFromServiceContext(context));
         }
-        
+
         /// <summary>
         /// Converts the context object to the loose dictionary based contract this initializer depends on for data.
         /// </summary>
@@ -71,14 +80,14 @@
         // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric\Shared\FabricTelemetryInitializer.cs
         private class KnownContextFieldNames
         {
-            public const string ServiceName = "ServiceFabric.ServiceName";
-            public const string ServiceTypeName = "ServiceFabric.ServiceTypeName";
-            public const string PartitionId = "ServiceFabric.PartitionId";
-            public const string ApplicationName = "ServiceFabric.ApplicationName";
-            public const string ApplicationTypeName = "ServiceFabric.ApplicationTypeName";
-            public const string NodeName = "ServiceFabric.NodeName";
-            public const string InstanceId = "ServiceFabric.InstanceId";
-            public const string ReplicaId = "ServiceFabric.ReplicaId";
+            public const string ServiceName = "Fabric_ServiceName";
+            public const string ServiceTypeName = "Fabrid_ServiceTypeName";
+            public const string PartitionId = "Fabric_PartitionId";
+            public const string ApplicationName = "Fabric_ApplicationName";
+            public const string ApplicationTypeName = "Fabric_ApplicationTypeName";
+            public const string InstanceId = "Fabric_InstanceId";
+            public const string ReplicaId = "Fabric_ReplicaId";
+            public const string NodeName = "Fabric_NodeName";
         }
     }
 }

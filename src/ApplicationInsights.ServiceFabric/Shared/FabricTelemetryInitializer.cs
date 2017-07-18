@@ -14,8 +14,10 @@
     /// </summary>
     public partial class FabricTelemetryInitializer : ITelemetryInitializer
     {
+        private const string PackageActivationIdEnvVariableName = "Fabric_ServicePackageActivationId";
+
         // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric.Native\Net45\FabricTelemetryInitializerExtension.cs
-        private const string ServiceContextKeyName = "AI.SF.ServiceContext";
+        private const string ServiceContextKeyName = "ServiceContext";
 
         private Dictionary<string, string> contextCollection;
 
@@ -36,10 +38,6 @@
                 }
 
                 return CallContext.LogicalGetData(ServiceContextKeyName) as Dictionary<string, string>;
-                //if (fromCallContext != null)
-                //{
-                //    return fromCallContext;
-                //}
 #endif
             }
         }
@@ -48,7 +46,51 @@
         /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
         /// </summary>
         public FabricTelemetryInitializer()
-        { }
+        {
+            string packageActivationId = Environment.GetEnvironmentVariable(PackageActivationIdEnvVariableName);
+            if (!string.IsNullOrEmpty(packageActivationId))
+            {
+                // Exclusive hosting model. Let's try to build telemetry from environment variables if present.
+
+                string serviceName = Environment.GetEnvironmentVariable(KnownContextFieldNames.ServiceName);
+                string serviceTypeName = Environment.GetEnvironmentVariable(KnownContextFieldNames.ServiceTypeName);
+                string partitionId = Environment.GetEnvironmentVariable(KnownContextFieldNames.PartitionId);
+                string applicationName = Environment.GetEnvironmentVariable(KnownContextFieldNames.ApplicationName);
+                string applicationTypeName = Environment.GetEnvironmentVariable(KnownContextFieldNames.ApplicationTypeName);
+                string instanceId = Environment.GetEnvironmentVariable(KnownContextFieldNames.InstanceId);
+                string replicaId = Environment.GetEnvironmentVariable(KnownContextFieldNames.ReplicaId);
+                string nodeName = Environment.GetEnvironmentVariable(KnownContextFieldNames.NodeName);
+                
+                if (!string.IsNullOrEmpty(serviceName)
+                    && !string.IsNullOrEmpty(serviceTypeName)
+                    && !string.IsNullOrEmpty(applicationName)
+                    && !string.IsNullOrEmpty(partitionId)
+                    && !string.IsNullOrEmpty(applicationTypeName)
+                    && !string.IsNullOrEmpty(nodeName)
+                    && (!string.IsNullOrEmpty(replicaId) || !string.IsNullOrEmpty(instanceId)))
+                {
+                    this.contextCollection = new Dictionary<string, string>()
+                    {
+                        { KnownContextFieldNames.ServiceName, serviceName },
+                        { KnownContextFieldNames.ServiceTypeName, serviceTypeName },
+                        { KnownContextFieldNames.PartitionId, partitionId },
+                        { KnownContextFieldNames.ApplicationName, applicationName },
+                        { KnownContextFieldNames.ApplicationTypeName, applicationTypeName },
+                        { KnownContextFieldNames.NodeName, nodeName }
+                    };
+
+                    if (!string.IsNullOrEmpty(replicaId))
+                    {
+                        this.contextCollection.Add(KnownContextFieldNames.ReplicaId, replicaId);
+                    }
+
+                    if (!string.IsNullOrEmpty(instanceId))
+                    {
+                        this.contextCollection.Add(KnownContextFieldNames.InstanceId, instanceId);
+                    }
+                }
+            }
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FabricTelemetryInitializer"/> class.
@@ -98,17 +140,17 @@
                 // And for reliable services, when service context is neither provided directly nor through call context
                 if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
                 {
-                    telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageName);
+                    telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownContextFieldNames.ServicePackageName);
                 }
 
                 if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
                 {
-                    telemetry.Context.Cloud.RoleInstance = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageActivatonId) ?? Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageInstanceId);
+                    telemetry.Context.Cloud.RoleInstance = Environment.GetEnvironmentVariable(KnownContextFieldNames.ServicePackageActivatonId) ?? Environment.GetEnvironmentVariable(KnownContextFieldNames.ServicePackageInstanceId);
                 }
 
                 if (!telemetry.Context.Properties.ContainsKey(KnownContextFieldNames.NodeName))
                 {
-                    string nodeName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.NodeName);
+                    string nodeName = Environment.GetEnvironmentVariable(KnownContextFieldNames.NodeName);
 
                     if (!string.IsNullOrEmpty(nodeName))
                     {
@@ -125,22 +167,17 @@
         // If you update this - also update the same constant in src\ApplicationInsights.ServiceFabric.Native\Net45\FabricTelemetryInitializerExtension.cs
         private class KnownContextFieldNames
         {
-            public const string ServiceName = "ServiceFabric.ServiceName";
-            public const string ServiceTypeName = "ServiceFabric.ServiceTypeName";
-            public const string PartitionId = "ServiceFabric.PartitionId";
-            public const string ApplicationName = "ServiceFabric.ApplicationName";
-            public const string ApplicationTypeName = "ServiceFabric.ApplicationTypeName";
-            public const string NodeName = "ServiceFabric.NodeName";
-            public const string InstanceId = "ServiceFabric.InstanceId";
-            public const string ReplicaId = "ServiceFabric.ReplicaId";
-        }
-
-        private class KnownEnvironmentVariableName
-        {
+            public const string ServiceName = "Fabric_ServiceName";
+            public const string ServiceTypeName = "Fabrid_ServiceTypeName";
+            public const string PartitionId = "Fabric_PartitionId";
+            public const string ApplicationName = "Fabric_ApplicationName";
+            public const string ApplicationTypeName = "Fabric_ApplicationTypeName";
+            public const string InstanceId = "Fabric_InstanceId";
+            public const string ReplicaId = "Fabric_ReplicaId";
+            public const string NodeName = "Fabric_NodeName";
             public const string ServicePackageName = "Fabric_ServicePackageName";
             public const string ServicePackageInstanceId = "Fabric_ServicePackageInstanceId";
             public const string ServicePackageActivatonId = "Fabric_ServicePackageActivationId";
-            public const string NodeName = "Fabric_NodeName";
         }
     }
 }
