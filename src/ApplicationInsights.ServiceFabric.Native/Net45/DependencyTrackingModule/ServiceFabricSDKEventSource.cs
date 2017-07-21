@@ -63,7 +63,25 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             this.WriteEvent(30, id, this.ApplicationName);
         }
 
+        [Event(
+            6,
+            Keywords = Keywords.Diagnostics,
+            Message = "Unknown error occurred.",
+            Level = EventLevel.Warning)]
+        public void UnknownError(string exception, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(6, exception, this.ApplicationName);
+        }
 
+        [Event(
+            7,
+            Keywords = Keywords.Diagnostics,
+            Message = "ServiceRemotingDiagnosticSubscriber failed to subscribe. Error details '{0}'",
+            Level = EventLevel.Error)]
+        public void ServiceRemotingDiagnosticSubscriberFailedToSubscribe(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(7, error, this.ApplicationName);
+        }
 
         [NonEvent]
         private string GetApplicationName()

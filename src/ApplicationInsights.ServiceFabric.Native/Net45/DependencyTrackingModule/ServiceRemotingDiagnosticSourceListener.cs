@@ -15,6 +15,10 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 {
     internal class ServiceRemotingDiagnosticSourceListener : IObserver<KeyValuePair<string, object>>, IDisposable
     {
+        private const string SR = "ServiceRemoting";
+        private const string SR_Tracked = "ServiceRemoting (tracked component)";
+        private const string HeaderNameIndicatingErrorResponse = "HasRemoteException";
+
         private TelemetryConfiguration _configuration;
         private string _effectiveProfileQueryEndpoint;
         private bool _setComponentCorrelationHttpHeaders;
@@ -193,7 +197,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             this.client.Initialize(telemetry);
 
             telemetry.Target = request.ServiceUri.ToString();
-            telemetry.Type = "ServiceRemoting";
+            telemetry.Type = SR;
             telemetry.Duration = currentActivity.Duration;
             if (response != null)
             {
@@ -215,23 +219,23 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         }
 
 
-        private void InjectRequestHeaders(IServiceRemotingRequestMessage request, string instrumentationKey, bool isLegacyEvent = false)
+        private void InjectRequestHeaders(IServiceRemotingRequestMessage request, string instrumentationKey)
         {
             try
             {
                 var currentActivity = Activity.Current;
 
-                HttpRequestHeaders requestHeaders = request.Headers;
-                if (requestHeaders != null && this.setComponentCorrelationHttpHeaders && !this.correlationDomainExclusionList.Contains(request.RequestUri.Host))
+                var requestHeaders = new ServiceRemotingRequestHeaderWrapper(request.GetHeader());
+                if (requestHeaders != null && this.setComponentCorrelationHttpHeaders && !this.correlationDomainExclusionList.Contains(request.ServiceUri.Host))
                 {
                     try
                     {
-                        if (!string.IsNullOrEmpty(instrumentationKey) && !HttpHeadersUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey))
+                        if (!string.IsNullOrEmpty(instrumentationKey) && !ServiceRemotingHeaderUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey))
                         {
                             string sourceApplicationId;
                             if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(instrumentationKey, out sourceApplicationId))
                             {
-                                HttpHeadersUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
+                                ServiceRemotingHeaderUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
                             }
                         }
                     }
@@ -243,40 +247,17 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                     // Add the root ID
                     string rootId = currentActivity.RootId;
                     if (!string.IsNullOrEmpty(rootId) &&
-                        !requestHeaders.Contains(RequestResponseHeaders.StandardRootIdHeader))
+                        !requestHeaders.TryGetHeaderValue(RequestResponseHeaders.StandardRootIdHeader, out string val))
                     {
-                        requestHeaders.Add(RequestResponseHeaders.StandardRootIdHeader, rootId);
+                        requestHeaders.AddHeader(RequestResponseHeaders.StandardRootIdHeader, rootId);
                     }
 
                     // Add the parent ID
                     string parentId = currentActivity.Id;
                     if (!string.IsNullOrEmpty(parentId) &&
-                        !requestHeaders.Contains(RequestResponseHeaders.StandardParentIdHeader))
+                        !requestHeaders.TryGetHeaderValue(RequestResponseHeaders.StandardParentIdHeader, out val))
                     {
-                        requestHeaders.Add(RequestResponseHeaders.StandardParentIdHeader, parentId);
-                        if (isLegacyEvent)
-                        {
-                            requestHeaders.Add(RequestResponseHeaders.RequestIdHeader, parentId);
-                        }
-                    }
-
-                    if (isLegacyEvent)
-                    {
-                        // we expect baggage to be empty or contain a few items
-                        using (IEnumerator<KeyValuePair<string, string>> e = currentActivity.Baggage.GetEnumerator())
-                        {
-                            if (e.MoveNext())
-                            {
-                                var baggage = new List<string>();
-                                do
-                                {
-                                    KeyValuePair<string, string> item = e.Current;
-                                    baggage.Add(new NameValueHeaderValue(item.Key, item.Value).ToString());
-                                }
-                                while (e.MoveNext());
-                                request.Headers.Add(RequestResponseHeaders.CorrelationContextHeader, baggage);
-                            }
-                        }
+                        requestHeaders.AddHeader(RequestResponseHeaders.StandardParentIdHeader, parentId);
                     }
                 }
             }
@@ -290,7 +271,8 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         {
             try
             {
-                string targetApplicationId = HttpHeadersUtilities.GetRequestContextKeyValue(response.Headers, RequestResponseHeaders.RequestContextCorrelationTargetKey);
+                var headers = new ServiceRemotingResponseHeaderWrapper(response.GetHeader());
+                string targetApplicationId = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(headers, RequestResponseHeaders.RequestContextCorrelationTargetKey);
                 if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(telemetry.Context.InstrumentationKey))
                 {
                     // We only add the cross component correlation key if the key does not represent the current component.
@@ -298,7 +280,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                     if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
                         targetApplicationId != sourceApplicationId)
                     {
-                        telemetry.Type = RemoteDependencyConstants.AI;
+                        telemetry.Type = SR_Tracked;
                         telemetry.Target += " | " + targetApplicationId;
                     }
                 }
@@ -308,9 +290,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 ServiceFabricSDKEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
             }
 
-            int statusCode = (int)response.StatusCode;
-            telemetry.ResultCode = (statusCode > 0) ? statusCode.ToString(CultureInfo.InvariantCulture) : string.Empty;
-            telemetry.Success = (statusCode > 0) && (statusCode < 400);
+            telemetry.Success = !response.GetHeader().TryGetHeaderValue(HeaderNameIndicatingErrorResponse, out string val);
         }
 
         /// <summary>
@@ -318,18 +298,16 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         /// </summary>
         private class ServiceRemotingCoreDiagnosticSourceSubscriber : IObserver<DiagnosticListener>, IDisposable
         {
-            private readonly HttpCoreDiagnosticSourceListener httpDiagnosticListener;
+            private readonly ServiceRemotingDiagnosticSourceListener srDiagnosticListener;
             private readonly IDisposable listenerSubscription;
-            private readonly bool isNetCore20HttpClient;
 
             private IDisposable eventSubscription;
 
             internal ServiceRemotingCoreDiagnosticSourceSubscriber(ServiceRemotingDiagnosticSourceListener listener)
             {
-                this.httpDiagnosticListener = listener;
+                this.srDiagnosticListener = listener;
 
-                var httpClientVersion = typeof(HttpClient).GetTypeInfo().Assembly.GetName().Version;
-                this.isNetCore20HttpClient = httpClientVersion.CompareTo(new Version(4, 2)) >= 0;
+                var serviceRemotingClientVersion = typeof(IServiceRemotingRequestMessage).Assembly.GetName().Version;
 
                 try
                 {
@@ -337,7 +315,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 }
                 catch (Exception ex)
                 {
-                    ServiceFabricSDKEventSource.Log.HttpCoreDiagnosticSubscriberFailedToSubscribe(ex.ToInvariantString());
+                    ServiceFabricSDKEventSource.Log.ServiceRemotingDiagnosticSubscriberFailedToSubscribe(ex.ToInvariantString());
                 }
             }
 
@@ -359,26 +337,22 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                     if (value.Name == "HttpHandlerDiagnosticListener")
                     {
                         this.eventSubscription = value.Subscribe(
-                            this.httpDiagnosticListener,
+                            this.srDiagnosticListener,
                             (evnt, r, _) =>
                             {
-                                if (isNetCore20HttpClient)
+                                if (evnt == ServiceRemotingExceptionEventName)
                                 {
-                                    if (evnt == ServiceRemotingExceptionEventName)
-                                    {
-                                        return true;
-                                    }
+                                    return true;
+                                }
 
-                                    if (!evnt.StartsWith(ServiceRemotingOutEventName, StringComparison.Ordinal))
-                                    {
-                                        return false;
-                                    }
+                                if (!evnt.StartsWith(ServiceRemotingOutEventName, StringComparison.Ordinal))
+                                {
+                                    return false;
+                                }
 
-                                    if (evnt == ServiceRemotingOutEventName && r != null)
-                                    {
-                                        var request = (IServiceRemotingRequestMessage)r;
-                                        return !this.applicationInsightsUrlFilter.IsApplicationInsightsUrl(request.RequestUri);
-                                    }
+                                if (evnt == ServiceRemotingOutEventName && r != null)
+                                {
+                                    return true;
                                 }
 
                                 return true;
@@ -418,8 +392,11 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             }
         }
 
-        // Todo (nizarq): Temporary
     }
+
+
+
+    // Todo (nizarq): Temporary
 
     /// <summary>
     /// 
@@ -429,7 +406,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         /// <summary>
         /// 
         /// </summary>
-        public Uri ServiceUri { get; }
+        Uri ServiceUri { get; }
 
         /// <summary>
         /// 
@@ -471,6 +448,12 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         /// <param name="headerName"></param>
         /// <param name="headerValue"></param>
         void AddHeader(string headerName, string headerValue);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="headerName"></param>
+        void RemoveHeader(string headerName);
 
         /// <summary>
         /// 
@@ -555,6 +538,12 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         /// <param name="headerName"></param>
         /// <param name="headerValue"></param>
         void AddHeader(string headerName, string headerValue);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="headerName"></param>
+        void RemoveHeader(string headerName);
 
         /// <summary>
         /// 

@@ -97,10 +97,23 @@
     <Compile Include="CorrelatingServiceRemotingClient.cs" />
     <Compile Include="CorrelatingServiceRemotingClientFactory.cs" />
     <Compile Include="FabricTelemetryInitializerExtension.cs" />
+    <Compile Include="DependencyTrackingModule\ExceptionUtilities.cs" />
+    <Compile Include="DependencyTrackingModule\IServiceRemotingMessageHeaderCollection.cs" />
+    <Compile Include="DependencyTrackingModule\RequestResponseHeaders.cs" />
+    <Compile Include="DependencyTrackingModule\ServiceFabricSDKEventSource.cs" />
+    <Compile Include="DependencyTrackingModule\CorrelationIdLookupHelper.cs" />
+    <Compile Include="DependencyTrackingModule\ICorrelationIdLookupHelper.cs" />
+    <Compile Include="DependencyTrackingModule\SdkVersionUtils.cs" />
+    <Compile Include="DependencyTrackingModule\ServiceRemotingHeaderUtilities.cs" />
+    <Compile Include="DependencyTrackingModule\ServiceRemotingResponseHeaderWrapper.cs" />
+    <Compile Include="DependencyTrackingModule\ServiceRemotingRequestHeaderWrapper.cs" />
+    <Compile Include="DependencyTrackingModule\ServiceRemotingDependencyTrackingTelemetryModule.cs" />
+    <Compile Include="DependencyTrackingModule\ServiceRemotingDiagnosticSourceListener.cs" />
     <Compile Include="IdUtilHelper.cs" />
     <Compile Include="IMethodNameProvider.cs" />
     <Compile Include="IWrappingClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RequestTrackingModule\ServiceRemotingRequestTrackingTelemetryModule.cs" />
     <Compile Include="ServiceRemotingLoggingStrings.cs" />
     <Compile Include="ServiceRemotingMessageHeadersExtensions.cs" />
     <Compile Include="TaskExtensions.cs" />
@@ -114,6 +127,7 @@
       <Name>ApplicationInsights.ServiceFabric.Net45</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>

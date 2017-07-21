@@ -11,9 +11,8 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
     /// <summary>
     /// Telemetry module tracking requests using service remoting.
     /// </summary>
-    public class ServiceRemotingRequestTrackingTelemetryModule : ITelemetryModule
+    public class ServiceRemotingDependencyTrackingTelemetryModule : ITelemetryModule
     {
-        private TelemetryConfiguration _telemetryConfiguration;
         private ServiceRemotingDiagnosticSourceListener _serviceRemotingDiagnosticSourceListener;
         private bool _correlationHeadersEnabled = true;
         private string _telemetryChannelEnpoint;
