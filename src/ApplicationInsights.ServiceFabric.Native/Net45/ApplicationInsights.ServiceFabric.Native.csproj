@@ -27,18 +27,31 @@
     <Reference Include="Microsoft.ApplicationInsights, Version=2.3.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <HintPath>..\..\..\..\packages\Microsoft.ApplicationInsights.2.3.0\lib\net45\Microsoft.ApplicationInsights.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.ServiceFabric.Actors">
+      <HintPath>..\..\..\..\packages\Microsoft.ServiceFabric.Actors.2.5.216\lib\net45\Microsoft.ServiceFabric.Actors.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.ServiceFabric.Internal, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
       <HintPath>..\..\..\..\packages\Microsoft.ServiceFabric.5.0.135\lib\net45\Microsoft.ServiceFabric.Internal.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.ServiceFabric.Internal.Strings, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
       <HintPath>..\..\..\..\packages\Microsoft.ServiceFabric.5.0.135\lib\net45\Microsoft.ServiceFabric.Internal.Strings.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.ServiceFabric.Services">
+      <HintPath>..\..\..\..\packages\Microsoft.ServiceFabric.Services.2.5.216\lib\net45\Microsoft.ServiceFabric.Services.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.ServiceFabric.Services.Remoting">
+      <HintPath>..\..\..\..\packages\Microsoft.ServiceFabric.Services.Remoting.2.5.216\lib\net45\Microsoft.ServiceFabric.Services.Remoting.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Diagnostics.DiagnosticSource">
+      <HintPath>..\..\..\..\packages\System.Diagnostics.DiagnosticSource.4.4.0\lib\net45\System.Diagnostics.DiagnosticSource.dll</HintPath>
+    </Reference>
     <Reference Include="System.Fabric, Version=5.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=AMD64">
       <HintPath>..\..\..\..\packages\Microsoft.ServiceFabric.5.0.135\lib\net45\System.Fabric.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -47,8 +60,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ActorServiceCorrelatingServiceRemotingClientFactory.cs" />
+    <Compile Include="CorrelatingRemotingMessageHandler.cs" />
+    <Compile Include="CorrelatingServiceRemotingClient.cs" />
+    <Compile Include="CorrelatingServiceRemotingClientFactory.cs" />
     <Compile Include="FabricTelemetryInitializerExtension.cs" />
+    <Compile Include="IWrappingClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReliableServiceCorrelatingServiceRemotingClientFactory.cs" />
+    <Compile Include="ServiceRemotingLoggingStrings.cs" />
+    <Compile Include="ServiceRemotingMessageHeadersExtensions.cs" />
+    <Compile Include="TaskExtensions.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
