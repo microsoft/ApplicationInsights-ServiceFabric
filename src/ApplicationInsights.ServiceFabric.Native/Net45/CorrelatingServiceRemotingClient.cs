@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.ServiceFabric.Remoting.Activities
 {
     using Microsoft.ApplicationInsights;
+    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ServiceFabric.Services.Remoting;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
@@ -23,6 +24,8 @@
         private Uri serviceUri;
         private Lazy<DataContractSerializer> baggageSerializer;
         private TelemetryClient telemetryClient;
+        private ServiceContext serviceContext;
+        private ITelemetryInitializer fabricTelemetryInitializer;
 
         /// <summary>
         /// Initializes the <see cref="CorrelatingServiceRemotingClient"/> object. It wraps the given inner client object for all the core
@@ -31,6 +34,19 @@
         /// <param name="innerClient">The client object which this client wraps.</param>
         /// <param name="serviceUri">The target Uri of the service which this client will call.</param>
         public CorrelatingServiceRemotingClient(IServiceRemotingClient innerClient, Uri serviceUri)
+            : this(innerClient, serviceUri, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes the <see cref="CorrelatingServiceRemotingClient"/> object. It wraps the given inner client object for all the core
+        /// remote call operation. It allows passing in a ServiceContext object associated with the caller so telemetry can be logged with
+        /// service fabric properties.
+        /// </summary>
+        /// <param name="innerClient">The client object which this client wraps.</param>
+        /// <param name="serviceUri">The target Uri of the service which this client will call.</param>
+        /// <param name="clientServiceContext">The service context of the caller creating this client object. Pass in null if there isn't one.</param>
+        public CorrelatingServiceRemotingClient(IServiceRemotingClient innerClient, Uri serviceUri, ServiceContext clientServiceContext)
         {
             if (innerClient == null)
             {
@@ -41,6 +57,8 @@
                 throw new ArgumentNullException(nameof(serviceUri));
             }
 
+            this.serviceContext = clientServiceContext;
+            this.fabricTelemetryInitializer = FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(this.serviceContext);
             this.InnerClient = innerClient;
             this.serviceUri = serviceUri;
             this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
@@ -108,6 +126,8 @@
                 dt.Context.Operation.Id = currentActivity.RootId;
                 dt.Context.Operation.ParentId = currentActivity.ParentId;
             }
+
+            this.fabricTelemetryInitializer.Initialize(dt);
 
             // Call StartOperation, this will create a new activity with the current activity being the parent. This
             // new activity also inherits most of the properties/attributes carried by the DependencyTelemetry object.

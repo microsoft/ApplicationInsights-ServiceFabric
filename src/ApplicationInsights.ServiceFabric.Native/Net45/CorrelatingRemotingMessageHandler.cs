@@ -2,6 +2,7 @@
 {
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ServiceFabric.Actors.Remoting.Runtime;
     using Microsoft.ServiceFabric.Actors.Runtime;
     using Microsoft.ServiceFabric.Services.Remoting;
@@ -11,7 +12,6 @@
     using System.Collections.Generic;
     using System.Diagnostics;
     using System.Fabric;
-    using System.Globalization;
     using System.IO;
     using System.Reflection;
     using System.Runtime.Serialization;
@@ -30,6 +30,7 @@
         private TelemetryClient telemetryClient;
         private IDictionary<int, ServiceMethodDispatcherBase> methodMap;
         private ServiceContext serviceContext;
+        private ITelemetryInitializer fabricTelemetryInitializer;
 
         /// <summary>
         /// Initializes the <see cref="CorrelatingRemotingMessageHandler"/> object. It wraps the given service for all the core
@@ -84,11 +85,12 @@
         private void Initialize()
         {
             this.telemetryClient = new TelemetryClient();
+            this.fabricTelemetryInitializer = FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(this.serviceContext);
             this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
 
             // TODO: SF should expose method name without the need to use reflection
-            this.methodMap = typeof(ServiceRemotingDispatcher).GetField("methodDispatcherMap", BindingFlags.Instance | BindingFlags.NonPublic)
-                                .GetValue(this.innerHandler) as IDictionary<int, ServiceMethodDispatcherBase>;
+            this.methodMap = typeof(ServiceRemotingDispatcher)?.GetField("methodDispatcherMap", BindingFlags.Instance | BindingFlags.NonPublic)
+                                ?.GetValue(this.innerHandler) as IDictionary<int, ServiceMethodDispatcherBase>;
         }
 
         private async Task<byte[]> HandleAndTrackRequestAsync(ServiceRemotingMessageHeaders messageHeaders, Func<Task<byte[]>> doHandleRequest)
@@ -123,11 +125,8 @@
                 rt.Context.Operation.Id = activity.RootId;
                 rt.Context.Operation.ParentId = activity.ParentId;
 
-                rt.Properties.Add(nameof(ServiceContext.ServiceName), this.serviceContext.ServiceName.ToString());
-                rt.Properties.Add(nameof(ServiceContext.PartitionId), this.serviceContext.PartitionId.ToString());
-                rt.Properties.Add(nameof(ServiceContext.ReplicaOrInstanceId), this.serviceContext.ReplicaOrInstanceId.ToString(CultureInfo.InvariantCulture));
-
-                if (this.methodMap != null && this.methodMap.TryGetValue(messageHeaders.InterfaceId, out ServiceMethodDispatcherBase method))
+                this.fabricTelemetryInitializer.Initialize(rt);
+                if (this.serviceContext != null && this.methodMap != null && this.methodMap.TryGetValue(messageHeaders.InterfaceId, out ServiceMethodDispatcherBase method))
                 {
                     try
                     {
