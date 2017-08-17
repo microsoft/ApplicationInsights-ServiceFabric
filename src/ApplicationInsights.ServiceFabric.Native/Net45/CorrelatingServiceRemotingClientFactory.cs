@@ -14,15 +14,16 @@
     /// underying functionality. <see cref="CorrelatingServiceRemotingClientFactory"/> calls <see cref="IServiceRemotingClientFactory"/> to create an inner client, which
     /// handles the main call transport and will be wrapped by a <see cref="CorrelatingServiceRemotingClient"/> object.
     /// </summary>
-    public abstract class CorrelatingServiceRemotingClientFactory : IServiceRemotingClientFactory
+    internal class CorrelatingServiceRemotingClientFactory : IServiceRemotingClientFactory
     {
         private IServiceRemotingClientFactory innerClientFactory;
+        private IMethodNameProvider methodNameProvider;
 
         /// <summary>
         /// Initializes the factory. It wraps another client factory as its inner client factory to perform many of its core operations.
         /// </summary>
         /// <param name="innerClientFactory">The client factory that this factory wraps.</param>
-        public CorrelatingServiceRemotingClientFactory(IServiceRemotingClientFactory innerClientFactory)
+        public CorrelatingServiceRemotingClientFactory(IServiceRemotingClientFactory innerClientFactory, IMethodNameProvider methodNameProvider)
         {
             if (innerClientFactory == null)
             {
@@ -32,6 +33,7 @@
             this.innerClientFactory = innerClientFactory;
             this.innerClientFactory.ClientConnected += this.ClientConnected;
             this.innerClientFactory.ClientDisconnected += this.ClientDisconnected;
+            this.methodNameProvider = methodNameProvider;
         }
 
         /// <summary>
@@ -60,8 +62,8 @@
         public async Task<IServiceRemotingClient> GetClientAsync(Uri serviceUri, ServicePartitionKey partitionKey, TargetReplicaSelector targetReplicaSelector, 
             string listenerName, OperationRetrySettings retrySettings, CancellationToken cancellationToken)
         {
-            var innerClient = await this.innerClientFactory.GetClientAsync(serviceUri, partitionKey, targetReplicaSelector, listenerName, retrySettings, cancellationToken);
-            return new CorrelatingServiceRemotingClient(innerClient, serviceUri);
+            var innerClient = await this.innerClientFactory.GetClientAsync(serviceUri, partitionKey, targetReplicaSelector, listenerName, retrySettings, cancellationToken).ConfigureAwait(false);
+            return new CorrelatingServiceRemotingClient(innerClient, serviceUri, methodNameProvider);
         }
 
         /// <summary>
@@ -78,8 +80,8 @@
         /// <returns>A System.Threading.Tasks.Task that represents outstanding operation. The result of the Task is the <see cref="CorrelatingServiceRemotingClient"/> object.</returns>
         public async Task<IServiceRemotingClient> GetClientAsync(ResolvedServicePartition previousRsp, TargetReplicaSelector targetReplicaSelector, string listenerName, OperationRetrySettings retrySettings, CancellationToken cancellationToken)
         {
-            var innerClient = await this.innerClientFactory.GetClientAsync(previousRsp, targetReplicaSelector, listenerName, retrySettings, cancellationToken);
-            return new CorrelatingServiceRemotingClient(innerClient, previousRsp.ServiceName);
+            var innerClient = await this.innerClientFactory.GetClientAsync(previousRsp, targetReplicaSelector, listenerName, retrySettings, cancellationToken).ConfigureAwait(false);
+            return new CorrelatingServiceRemotingClient(innerClient, previousRsp.ServiceName, methodNameProvider);
         }
 
         /// <summary>

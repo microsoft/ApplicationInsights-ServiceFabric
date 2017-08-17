@@ -4,6 +4,7 @@
     using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ServiceFabric.Services.Remoting;
+    using Microsoft.ServiceFabric.Services.Remoting.Builder;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
     using System;
     using System.Collections.Generic;
@@ -19,13 +20,12 @@
     /// Service remoting client that wraps another service remoting client and adds correlation id and context propagation support. This allows
     /// traces the client and the service to log traces with the same relevant correlation id and context.
     /// </summary>
-    public class CorrelatingServiceRemotingClient : IServiceRemotingClient, IWrappingClient
+    internal class CorrelatingServiceRemotingClient : IServiceRemotingClient, IWrappingClient
     {
         private Uri serviceUri;
         private Lazy<DataContractSerializer> baggageSerializer;
         private TelemetryClient telemetryClient;
-        private ServiceContext serviceContext;
-        private ITelemetryInitializer fabricTelemetryInitializer;
+        private IMethodNameProvider methodNameProvider;
 
         /// <summary>
         /// Initializes the <see cref="CorrelatingServiceRemotingClient"/> object. It wraps the given inner client object for all the core
@@ -33,20 +33,7 @@
         /// </summary>
         /// <param name="innerClient">The client object which this client wraps.</param>
         /// <param name="serviceUri">The target Uri of the service which this client will call.</param>
-        public CorrelatingServiceRemotingClient(IServiceRemotingClient innerClient, Uri serviceUri)
-            : this(innerClient, serviceUri, null)
-        {
-        }
-
-        /// <summary>
-        /// Initializes the <see cref="CorrelatingServiceRemotingClient"/> object. It wraps the given inner client object for all the core
-        /// remote call operation. It allows passing in a ServiceContext object associated with the caller so telemetry can be logged with
-        /// service fabric properties.
-        /// </summary>
-        /// <param name="innerClient">The client object which this client wraps.</param>
-        /// <param name="serviceUri">The target Uri of the service which this client will call.</param>
-        /// <param name="clientServiceContext">The service context of the caller creating this client object. Pass in null if there isn't one.</param>
-        public CorrelatingServiceRemotingClient(IServiceRemotingClient innerClient, Uri serviceUri, ServiceContext clientServiceContext)
+        public CorrelatingServiceRemotingClient(IServiceRemotingClient innerClient, Uri serviceUri, IMethodNameProvider methodNameProvider)
         {
             if (innerClient == null)
             {
@@ -57,12 +44,11 @@
                 throw new ArgumentNullException(nameof(serviceUri));
             }
 
-            this.serviceContext = clientServiceContext;
-            this.fabricTelemetryInitializer = FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(this.serviceContext);
             this.InnerClient = innerClient;
             this.serviceUri = serviceUri;
             this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
             this.telemetryClient = new TelemetryClient();
+            this.methodNameProvider = methodNameProvider;
         }
 
         /// <summary>
@@ -114,61 +100,53 @@
 
         private async Task<byte[]> SendAndTrackRequestAsync(ServiceRemotingMessageHeaders messageHeaders, byte[] requestBody, Func<Task<byte[]>> doSendRequest)
         {
-            DependencyTelemetry dt = new DependencyTelemetry();
-            dt.Name = ServiceRemotingLoggingStrings.OutboundRequestActivityName;
+            string methodName = this.methodNameProvider.GetMethodName(messageHeaders.InterfaceId, messageHeaders.MethodId);
 
-            // Determine if there is currently an activity. If there is, initializes the dependency telemetry with the activity information,
-            // which helps set the right context for the dependency telemetry
-            Activity currentActivity = Activity.Current;
-            if (currentActivity != null)
+            // Weird case, just use the numerical id as the method name
+            if (string.IsNullOrEmpty(methodName))
             {
-                dt.Id = currentActivity.Id;
-                dt.Context.Operation.Id = currentActivity.RootId;
-                dt.Context.Operation.ParentId = currentActivity.ParentId;
+                methodName = messageHeaders.MethodId.ToString();
             }
 
-            this.fabricTelemetryInitializer.Initialize(dt);
+            // Since service remoting doesn't really have an URL like HTTP URL, we will fake one up here containing the service URI with the interface id and
+            // method id of the remote method
+            string operationName = this.serviceUri.AbsoluteUri + "/" + methodName;
 
-            // Call StartOperation, this will create a new activity with the current activity being the parent. This
-            // new activity also inherits most of the properties/attributes carried by the DependencyTelemetry object.
-            var operation = telemetryClient.StartOperation<DependencyTelemetry>(dt);
+            // Call StartOperation, this will create a new activity with the current activity being the parent.
+            var operation = telemetryClient.StartOperation<DependencyTelemetry>(operationName);
+            operation.Telemetry.Type = ServiceRemotingLoggingStrings.ServiceRemotingTypeName;
+            operation.Telemetry.Data = operationName;
+            operation.Telemetry.Target = operationName;
 
-            bool success = true;
             try
             {
-                // After the operation, the activity stack, if any, will have been changed. We need
-                // to update what our current activity is.
-                currentActivity = Activity.Current;
-                if (currentActivity != null)
-                {
-                    messageHeaders.AddHeader(ServiceRemotingLoggingStrings.RequestIdHeaderName, currentActivity.Id);
+                messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
+                messageHeaders.AddHeader(ServiceRemotingLoggingStrings.RootIdHeaderName, operation.Telemetry.Context.Operation.Id);
 
-                    // We expect the baggage to not be there at all or just contain a few small items
-                    if (currentActivity.Baggage.Any())
+                // We expect the baggage to not be there at all or just contain a few small items
+                Activity currentActivity = Activity.Current;
+                if (currentActivity.Baggage.Any())
+                {
+                    using (var ms = new MemoryStream())
                     {
-                        using (var ms = new MemoryStream())
-                        {
-                            var dictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(ms);
-                            this.baggageSerializer.Value.WriteObject(dictionaryWriter, currentActivity.Baggage);
-                            dictionaryWriter.Flush();
-                            messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, ms.GetBuffer());
-                        }
+                        var dictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(ms);
+                        this.baggageSerializer.Value.WriteObject(dictionaryWriter, currentActivity.Baggage);
+                        dictionaryWriter.Flush();
+                        messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, ms.GetBuffer());
                     }
                 }
 
-                byte[] result = await doSendRequest();
+                byte[] result = await doSendRequest().ConfigureAwait(false);
                 return result;
             }
             catch (Exception e)
-            {
-                success = false;
+            {                
                 telemetryClient.TrackException(e);
+                operation.Telemetry.Success = false;
                 throw;
             }
             finally
             {
-                dt.Success = success;
-
                 // Stopping the operation, this will also pop the activity created by StartOperation off the activity stack.
                 telemetryClient.StopOperation(operation);
             }

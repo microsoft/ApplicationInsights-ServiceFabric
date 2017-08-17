@@ -2,9 +2,9 @@
 {
     internal static class ServiceRemotingLoggingStrings
     {
-        public const string InboundRequestActivityName = "Microsoft.ServiceFabric.Remoting.RemotingRequestIn";
-        public const string RequestIdHeaderName = "Request-Id";
-        public const string CorrelationContextHeaderName = "Correlation-Context";
-        public const string OutboundRequestActivityName = "Microsoft.ServiceFabric.Remoting.RemotingRequestOut";
+        public const string ParentIdHeaderName = "ParentId";
+        public const string RootIdHeaderName = "RootId";
+        public const string CorrelationContextHeaderName = "CorrelationContext";
+        public const string ServiceRemotingTypeName = "ServiceFabricServiceRemoting";
     }
 }

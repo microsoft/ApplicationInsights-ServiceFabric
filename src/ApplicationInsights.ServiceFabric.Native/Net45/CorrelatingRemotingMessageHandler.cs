@@ -30,7 +30,6 @@
         private TelemetryClient telemetryClient;
         private IDictionary<int, ServiceMethodDispatcherBase> methodMap;
         private ServiceContext serviceContext;
-        private ITelemetryInitializer fabricTelemetryInitializer;
 
         /// <summary>
         /// Initializes the <see cref="CorrelatingRemotingMessageHandler"/> object. It wraps the given service for all the core
@@ -85,7 +84,6 @@
         private void Initialize()
         {
             this.telemetryClient = new TelemetryClient();
-            this.fabricTelemetryInitializer = FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(this.serviceContext);
             this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
 
             // TODO: SF should expose method name without the need to use reflection
@@ -95,75 +93,73 @@
 
         private async Task<byte[]> HandleAndTrackRequestAsync(ServiceRemotingMessageHeaders messageHeaders, Func<Task<byte[]>> doHandleRequest)
         {
-            // Create a new activity object representing the activity coming from the caller. This won't be the activity
-            // used to track our further operations, but it will just serve as the parent activity. After it's restored
-            // with data from the wire, we call start to put it into the activity stack so it's in effect.
-            var activity = new Activity(ServiceRemotingLoggingStrings.InboundRequestActivityName);
-            if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.RequestIdHeaderName, out string requestId))
-            {
-                activity.SetParentId(requestId);
-
-                if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationBytes))
-                {
-                    var baggageBytesStream = new MemoryStream(correlationBytes, writable: false);
-                    var dictionaryReader = XmlDictionaryReader.CreateBinaryReader(baggageBytesStream, XmlDictionaryReaderQuotas.Max);
-                    var baggage = this.baggageSerializer.Value.ReadObject(dictionaryReader) as IEnumerable<KeyValuePair<string, string>>;
-                    foreach (KeyValuePair<string, string> pair in baggage)
-                    {
-                        activity.AddBaggage(pair.Key, pair.Value);
-                    }
-
-                }
-            }
-            activity.Start();
-
             // Create and prepare activity and RequestTelemetry objects to track this request.
-            try
-            {
-                RequestTelemetry rt = new RequestTelemetry();
-                rt.Id = activity.Id;
-                rt.Context.Operation.Id = activity.RootId;
-                rt.Context.Operation.ParentId = activity.ParentId;
+            RequestTelemetry rt = new RequestTelemetry();
 
-                this.fabricTelemetryInitializer.Initialize(rt);
-                if (this.serviceContext != null && this.methodMap != null && this.methodMap.TryGetValue(messageHeaders.InterfaceId, out ServiceMethodDispatcherBase method))
+            if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out string parentId) &&
+                messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.RootIdHeaderName, out string rootId))
+            {
+                rt.Context.Operation.Id = rootId;
+                rt.Context.Operation.ParentId = parentId;
+            }
+
+            // Do our best effort in setting the request name. If we have the service context, add the service name. If
+            // we have the method map, add the method name to it.
+            if (this.serviceContext != null)
+            {
+                string methodName = null;
+                if (this.methodMap != null && this.methodMap.TryGetValue(messageHeaders.InterfaceId, out ServiceMethodDispatcherBase method))
                 {
                     try
                     {
-                        string requestName = this.serviceContext.ServiceName + "/" + method.GetMethodName(messageHeaders.MethodId);
-                        rt.Name = requestName;
+                        methodName = method.GetMethodName(messageHeaders.MethodId);
                     }
-                    catch (KeyNotFoundException) { }
+                    catch (KeyNotFoundException)
+                    {
+                    }
                 }
 
-                // Starts the operation. This also creates a new activity, and it's a child activity of the activity that we
-                // previous restored earlier as the parent.
-                var operation = telemetryClient.StartOperation<RequestTelemetry>(rt);
+                // Weird case, just use the numerical id as the method name
+                if (string.IsNullOrEmpty(methodName))
+                {
+                    methodName = messageHeaders.MethodId.ToString();
+                }
 
-                bool success = true;
-                try
-                {
-                    byte[] result = await doHandleRequest();
-                    return result;
-                }
-                catch (Exception e)
-                {
-                    success = false;
-                    telemetryClient.TrackException(e);
-                    throw;
-                }
-                finally
-                {
-                    rt.Success = success;
+                rt.Name = this.serviceContext.ServiceName + "/" + methodName;
+            }
 
-                    // Stopping the operation, this will also pop the activity created by StartOperation off the activity stack.
-                    telemetryClient.StopOperation(operation);
+            Activity activity = Activity.Current;
+            if (activity != null &&
+                messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationBytes))
+            {
+                var baggageBytesStream = new MemoryStream(correlationBytes, writable: false);
+                var dictionaryReader = XmlDictionaryReader.CreateBinaryReader(baggageBytesStream, XmlDictionaryReaderQuotas.Max);
+                var baggage = this.baggageSerializer.Value.ReadObject(dictionaryReader) as IEnumerable<KeyValuePair<string, string>>;
+                foreach (KeyValuePair<string, string> pair in baggage)
+                {
+                    activity.AddBaggage(pair.Key, pair.Value);
                 }
+            }
+
+            // Starts the operation. This also creates a new activity, and it's a child activity of the activity that we
+            // previous restored earlier as the parent.
+            var operation = telemetryClient.StartOperation<RequestTelemetry>(rt);
+
+            try
+            {
+                byte[] result = await doHandleRequest().ConfigureAwait(false);
+                return result;
+            }
+            catch (Exception e)
+            {
+                telemetryClient.TrackException(e);
+                operation.Telemetry.Success = false;
+                throw;
             }
             finally
             {
-                // Stopping the operation, this will also pop the activity we created to represent the parent activity.
-                activity.Stop();
+                // Stopping the operation, this will also pop the activity created by StartOperation off the activity stack.
+                telemetryClient.StopOperation(operation);
             }
         }
     }
