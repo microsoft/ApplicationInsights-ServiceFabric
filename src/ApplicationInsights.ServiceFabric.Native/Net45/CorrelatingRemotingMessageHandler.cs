@@ -96,11 +96,10 @@
             // Create and prepare activity and RequestTelemetry objects to track this request.
             RequestTelemetry rt = new RequestTelemetry();
 
-            if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out string parentId) &&
-                messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.RootIdHeaderName, out string rootId))
+            if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out string parentId))
             {
-                rt.Context.Operation.Id = rootId;
                 rt.Context.Operation.ParentId = parentId;
+                rt.Context.Operation.Id = GetOperationId(parentId);
             }
 
             // Do our best effort in setting the request name. If we have the service context, add the service name. If
@@ -125,24 +124,23 @@
                     methodName = messageHeaders.MethodId.ToString();
                 }
 
-                rt.Name = this.serviceContext.ServiceName + "/" + methodName;
+                rt.Name = methodName;
             }
 
-            Activity activity = Activity.Current;
-            if (activity != null &&
-                messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationBytes))
+            if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationBytes))
             {
                 var baggageBytesStream = new MemoryStream(correlationBytes, writable: false);
                 var dictionaryReader = XmlDictionaryReader.CreateBinaryReader(baggageBytesStream, XmlDictionaryReaderQuotas.Max);
                 var baggage = this.baggageSerializer.Value.ReadObject(dictionaryReader) as IEnumerable<KeyValuePair<string, string>>;
                 foreach (KeyValuePair<string, string> pair in baggage)
                 {
-                    activity.AddBaggage(pair.Key, pair.Value);
+                    rt.Context.Properties.Add(pair.Key, pair.Value);
                 }
             }
 
-            // Starts the operation. This also creates a new activity, and it's a child activity of the activity that we
-            // previous restored earlier as the parent.
+            // Call StartOperation, this will create a new activity with the current activity being the parent.
+            // Since service remoting doesn't really have an URL like HTTP URL, we will do our best approximate that for
+            // the Name, Type, Data, and Target properties
             var operation = telemetryClient.StartOperation<RequestTelemetry>(rt);
 
             try
@@ -161,6 +159,25 @@
                 // Stopping the operation, this will also pop the activity created by StartOperation off the activity stack.
                 telemetryClient.StopOperation(operation);
             }
+        }
+
+        /// <summary>
+        /// Gets the operation Id from the request Id: substring between '|' and first '.'.
+        /// </summary>
+        /// <param name="id">Id to get the operation id from.</param>
+        private static string GetOperationId(string id)
+        {
+            // id MAY start with '|' and contain '.'. We return substring between them
+            // ParentId MAY NOT have hierarchical structure and we don't know if initially rootId was started with '|',
+            // so we must NOT include first '|' to allow mixed hierarchical and non-hierarchical request id scenarios
+            int rootEnd = id.IndexOf('.');
+            if (rootEnd < 0)
+            {
+                rootEnd = id.Length;
+            }
+
+            int rootStart = id[0] == '|' ? 1 : 0;
+            return id.Substring(rootStart, rootEnd - rootStart);
         }
     }
 }

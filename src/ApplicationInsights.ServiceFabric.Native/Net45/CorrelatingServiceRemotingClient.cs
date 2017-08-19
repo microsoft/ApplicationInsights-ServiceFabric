@@ -108,20 +108,17 @@
                 methodName = messageHeaders.MethodId.ToString();
             }
 
-            // Since service remoting doesn't really have an URL like HTTP URL, we will fake one up here containing the service URI with the interface id and
-            // method id of the remote method
-            string operationName = this.serviceUri.AbsoluteUri + "/" + methodName;
-
             // Call StartOperation, this will create a new activity with the current activity being the parent.
-            var operation = telemetryClient.StartOperation<DependencyTelemetry>(operationName);
+            // Since service remoting doesn't really have an URL like HTTP URL, we will do our best approximate that for
+            // the Name, Type, Data, and Target properties
+            var operation = telemetryClient.StartOperation<DependencyTelemetry>(methodName);
             operation.Telemetry.Type = ServiceRemotingLoggingStrings.ServiceRemotingTypeName;
-            operation.Telemetry.Data = operationName;
-            operation.Telemetry.Target = operationName;
+            operation.Telemetry.Data = this.serviceUri.AbsoluteUri + "/" + methodName;
+            operation.Telemetry.Target = this.serviceUri.AbsoluteUri;
 
             try
             {
                 messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
-                messageHeaders.AddHeader(ServiceRemotingLoggingStrings.RootIdHeaderName, operation.Telemetry.Context.Operation.Id);
 
                 // We expect the baggage to not be there at all or just contain a few small items
                 Activity currentActivity = Activity.Current;
