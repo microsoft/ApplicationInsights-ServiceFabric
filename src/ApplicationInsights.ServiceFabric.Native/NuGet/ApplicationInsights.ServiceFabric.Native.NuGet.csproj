@@ -16,7 +16,7 @@
     <NoWarn>2008</NoWarn>
     <SolutionDir Condition="$(SolutionDir) == '' Or $(SolutionDir) == '*Undefined*'">..\..\</SolutionDir>
     <PackageSpecFile>$(MSBuildProjectDirectory)\Package.nuspec</PackageSpecFile>
-    <PackageVersionFile>$(BinRoot)\$(Configuration)\Src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.dll</PackageVersionFile>
+    <PackageVersionFile>$(BinRoot)\$(Configuration)\Src\ApplicationInsights.ServiceFabric.Native\Net45\Microsoft.AI.ServiceFabric.Native.dll</PackageVersionFile>
     <TargetFrameworkProfile />
     <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>

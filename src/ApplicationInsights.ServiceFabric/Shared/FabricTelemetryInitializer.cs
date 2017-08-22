@@ -30,16 +30,12 @@
                 return null;
 #else
 
-                if (this.contextCollection != null)
+                if (this.contextCollection != null && this.contextCollection.Count > 0)
                 {
                     return this.contextCollection;
                 }
 
                 return CallContext.LogicalGetData(ServiceContextKeyName) as Dictionary<string, string>;
-                //if (fromCallContext != null)
-                //{
-                //    return fromCallContext;
-                //}
 #endif
             }
         }
