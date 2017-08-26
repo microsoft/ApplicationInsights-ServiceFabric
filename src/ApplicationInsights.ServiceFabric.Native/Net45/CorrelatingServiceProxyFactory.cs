@@ -3,20 +3,17 @@
     using Microsoft.ServiceFabric.Services.Client;
     using Microsoft.ServiceFabric.Services.Communication.Client;
     using Microsoft.ServiceFabric.Services.Remoting;
-    using Microsoft.ServiceFabric.Services.Remoting.Builder;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
-    using Microsoft.ServiceFabric.Services.Remoting.Runtime;
     using System;
-    using System.Collections.Generic;
     using System.Fabric;
-    using System.Reflection;
 
     /// <summary>
     /// Class for creating and wrapping the service proxy factory. This class delegates all operations to the
     /// inner <see cref="ServiceProxyFactory"/> but tracks all the interfaces for which proxies were created. 
     /// </summary>
-    public class CorrelatingServiceProxyFactory : CorrelatingProxyFactory, IServiceProxyFactory
+    public class CorrelatingServiceProxyFactory : IServiceProxyFactory
     {
+        private MethodNameProvider methodNameProvider;
         private ServiceProxyFactory serviceProxyFactory;
 
         /// <summary>
@@ -29,8 +26,9 @@
         /// </param>
         /// <param name="retrySettings">Specifies the retry policy to use on exceptions seen when using the proxies created by this factory</param>
         public CorrelatingServiceProxyFactory(ServiceContext serviceContext, Func<IServiceRemotingCallbackClient, IServiceRemotingClientFactory> createServiceRemotingClientFactory = null, OperationRetrySettings retrySettings = null)
-            : base(serviceContext)
         {
+            this.methodNameProvider = new MethodNameProvider();
+
             // Layer the factory structure so the hierarchy will look like this:
             // CorrelatingServiceProxyFactory
             //  --> ServiceProxyFactory
@@ -39,7 +37,7 @@
             this.serviceProxyFactory = new ServiceProxyFactory(
                 callbackClient => {
                     IServiceRemotingClientFactory innerClientFactory = createServiceRemotingClientFactory(callbackClient);
-                    return new CorrelatingServiceRemotingClientFactory(innerClientFactory, this);
+                    return new CorrelatingServiceRemotingClientFactory(innerClientFactory, this.methodNameProvider);
                 },
                 retrySettings);
         }
@@ -60,7 +58,7 @@
         public TServiceInterface CreateServiceProxy<TServiceInterface>(Uri serviceUri, ServicePartitionKey partitionKey = null, TargetReplicaSelector targetReplicaSelector = TargetReplicaSelector.Default, string listenerName = null) where TServiceInterface : IService
         {
             TServiceInterface proxy = this.serviceProxyFactory.CreateServiceProxy<TServiceInterface>(serviceUri, partitionKey, targetReplicaSelector, listenerName);
-            this.AddMethodsForProxy<TServiceInterface>(proxy);
+            this.methodNameProvider.AddMethodsForProxyOrService(proxy.GetType().GetInterfaces(), typeof(IService));
             return proxy;
         }
     }

@@ -23,6 +23,7 @@
         /// Initializes the factory. It wraps another client factory as its inner client factory to perform many of its core operations.
         /// </summary>
         /// <param name="innerClientFactory">The client factory that this factory wraps.</param>
+        /// <param name="methodNameProvider">The provider that helps resolve method ids into method names.</param>
         public CorrelatingServiceRemotingClientFactory(IServiceRemotingClientFactory innerClientFactory, IMethodNameProvider methodNameProvider)
         {
             if (innerClientFactory == null)

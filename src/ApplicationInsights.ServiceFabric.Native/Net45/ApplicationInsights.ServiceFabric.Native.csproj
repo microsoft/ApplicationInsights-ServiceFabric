@@ -63,10 +63,11 @@
     <Compile Include="CorrelatingRemotingMessageHandler.cs" />
     <Compile Include="CorrelatingActorProxyFactory.cs" />
     <Compile Include="CorrelatingServiceProxyFactory.cs" />
-    <Compile Include="CorrelatingProxyFactory.cs" />
+    <Compile Include="MethodNameProvider.cs" />
     <Compile Include="CorrelatingServiceRemotingClient.cs" />
     <Compile Include="CorrelatingServiceRemotingClientFactory.cs" />
     <Compile Include="FabricTelemetryInitializerExtension.cs" />
+    <Compile Include="IdUtilHelper.cs" />
     <Compile Include="IMethodNameProvider.cs" />
     <Compile Include="IWrappingClient.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

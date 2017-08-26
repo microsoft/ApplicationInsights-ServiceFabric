@@ -1,10 +1,8 @@
 ﻿namespace Microsoft.ApplicationInsights.ServiceFabric.Remoting.Activities
 {
     using Microsoft.ApplicationInsights;
-    using Microsoft.ApplicationInsights.Extensibility;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ServiceFabric.Services.Remoting;
-    using Microsoft.ServiceFabric.Services.Remoting.Builder;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
     using System;
     using System.Collections.Generic;
@@ -100,7 +98,18 @@
 
         private async Task<byte[]> SendAndTrackRequestAsync(ServiceRemotingMessageHeaders messageHeaders, byte[] requestBody, Func<Task<byte[]>> doSendRequest)
         {
-            string methodName = this.methodNameProvider.GetMethodName(messageHeaders.InterfaceId, messageHeaders.MethodId);
+            string methodName;
+            
+            // Check to see if this request is actually on an actor interface, by trying to find actor message headers and get
+            // the ids
+            if (messageHeaders.TryGetActorMethodAndInterfaceIds(out int methodId, out int interfaceId))
+            {
+                methodName = this.methodNameProvider.GetMethodName(interfaceId, methodId);
+            }
+            else
+            {
+                methodName = this.methodNameProvider.GetMethodName(messageHeaders.InterfaceId, messageHeaders.MethodId);
+            }
 
             // Weird case, just use the numerical id as the method name
             if (string.IsNullOrEmpty(methodName))
