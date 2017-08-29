@@ -39,7 +39,7 @@
                 }
             }
             
-            public static bool GetIds(byte[] headerBytes, out int methodId, out int interfaceId)
+            public static bool TryGetIds(byte[] headerBytes, out int methodId, out int interfaceId)
             {
                 methodId = 0;
                 interfaceId = 0;
@@ -88,7 +88,7 @@
                 return false;
             }
 
-            return ActorMessageHeadersHelper.GetIds(actorHeaderBytes, out methodId, out interfaceId);
+            return ActorMessageHeadersHelper.TryGetIds(actorHeaderBytes, out methodId, out interfaceId);
         }
     }
 }

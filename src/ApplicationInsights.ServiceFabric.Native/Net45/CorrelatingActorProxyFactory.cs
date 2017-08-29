@@ -28,7 +28,7 @@
         /// <param name="retrySettings">Specifies the retry policy to use on exceptions seen when using the proxies created by this factory</param>
         public CorrelatingActorProxyFactory(ServiceContext serviceContext, Func<IServiceRemotingCallbackClient, IServiceRemotingClientFactory> createActorRemotingClientFactory = null, OperationRetrySettings retrySettings = null)
         {
-            this.methodNameProvider = new MethodNameProvider();
+            this.methodNameProvider = new MethodNameProvider(true /* threadSafe */);
 
             // Layer the factory structure so the hierarchy will look like this:
             // CorrelatingServiceProxyFactory

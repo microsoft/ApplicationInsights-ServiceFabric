@@ -91,7 +91,7 @@
         {
             this.telemetryClient = new TelemetryClient();
             this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
-            this.methodNameProvider = new MethodNameProvider();
+            this.methodNameProvider = new MethodNameProvider(false /* threadSafe */);
         }
 
         private async Task<byte[]> HandleAndTrackRequestAsync(ServiceRemotingMessageHeaders messageHeaders, Func<Task<byte[]>> doHandleRequest)

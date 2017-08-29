@@ -1,6 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.ServiceFabric.Remoting.Activities
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Reflection;
 
@@ -12,18 +13,24 @@
     /// </summary>
     internal class MethodNameProvider : IMethodNameProvider
     {
-        private Dictionary<int, Dictionary<int, string>> idToMethodNameMap;
-        private HashSet<Type> processedTypes;
-        private object thisLock;
+        private IDictionary<int, Dictionary<int, string>> idToMethodNameMap;
+        private bool useConcurrentDictionary;
 
         /// <summary>
         /// Instantiates the <see cref="MethodNameProvider"/> with the specified remoting factory and retrysettings.
         /// </summary>
-        public MethodNameProvider()
+        /// <param name="threadSafe">Whether this method name provider needs to be thread safe or not with respect to concurrent reads and writes.</param>
+        public MethodNameProvider(bool threadSafe)
         {
-            this.idToMethodNameMap = new Dictionary<int, Dictionary<int, string>>();
-            processedTypes = new HashSet<Type>();
-            thisLock = new object();
+            this.useConcurrentDictionary = threadSafe;
+            if (threadSafe)
+            {
+                this.idToMethodNameMap = new ConcurrentDictionary<int, Dictionary<int, string>>();
+            }
+            else
+            {
+                this.idToMethodNameMap = new Dictionary<int, Dictionary<int, string>>();
+            }
         }
 
         /// <summary>
@@ -35,14 +42,11 @@
         /// <returns></returns>
         public string GetMethodName(int interfaceId, int methodId)
         {
-            lock (thisLock)
+            if (this.idToMethodNameMap.TryGetValue(interfaceId, out Dictionary<int, string> methodMap))
             {
-                if (this.idToMethodNameMap.TryGetValue(interfaceId, out Dictionary<int, string> methodMap))
+                if (methodMap.TryGetValue(methodId, out string methodName))
                 {
-                    if (methodMap.TryGetValue(methodId, out string methodName))
-                    {
-                        return methodName;
-                    }
+                    return methodName;
                 }
             }
 
@@ -56,33 +60,32 @@
         /// <param name="baseInterfaceType">The base interface type as a filter where only interfaces that derives for this base interface type are added.</param>
         public void AddMethodsForProxyOrService(IEnumerable<Type> interfaces, Type baseInterfaceType)
         {
-            lock (thisLock)
+            foreach (Type interfaceType in interfaces)
             {
-                foreach (Type interfaceType in interfaces)
+                if (!baseInterfaceType.IsAssignableFrom(interfaceType))
                 {
-                    // It's important that we don't reprocess types that we have seen before. Otherwise
-                    // it would be too much overhead with each remoting call
-                    if (this.processedTypes.Contains(interfaceType) ||
-                        !baseInterfaceType.IsAssignableFrom(interfaceType))
-                    {
-                        continue;
-                    }
+                    continue;
+                }
 
-                    int interfaceId = IdUtilHelper.ComputeId(interfaceType);
-                    Dictionary<int, string> methodMap = null;
+                int interfaceId = IdUtilHelper.ComputeId(interfaceType);
 
-                    if (!this.idToMethodNameMap.TryGetValue(interfaceId, out methodMap))
-                    {
-                        methodMap = new Dictionary<int, string>();
-                        this.idToMethodNameMap.Add(interfaceId, methodMap);
-                    }
-
+                // Add if it's not there, don't add if it's there already
+                if (!this.idToMethodNameMap.TryGetValue(interfaceId, out Dictionary<int, string> methodMap))
+                {
+                    // Since idToMethodNameMap can be accessed by multiple threads, it is important to make sure
+                    // the inner dictionary has everything added, before this is added to idToMethodNameMap. The
+                    // inner dictionary will never be thread safe and it doesn't need to be, as long as it always
+                    // is effectively "read-only". If the order is reverse, you risk having another thread trying
+                    // to fetch a method from it prematurely.
+                    methodMap = new Dictionary<int, string>();
                     foreach (MethodInfo method in interfaceType.GetMethods())
                     {
                         methodMap[IdUtilHelper.ComputeId(method)] = method.Name;
                     }
 
-                    this.processedTypes.Add(interfaceType);
+                    // If multiple threads are trying to set this entry, the last one wins, and this is ok to have
+                    // since this method map should always look the same once it's constructed.
+                    this.idToMethodNameMap[interfaceId] = methodMap;
                 }
             }
         }
