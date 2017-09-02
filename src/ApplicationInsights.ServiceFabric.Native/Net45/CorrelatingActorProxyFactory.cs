@@ -2,35 +2,19 @@
 {
     using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Client;
-    using Microsoft.ServiceFabric.Actors.Runtime;
     using Microsoft.ServiceFabric.Services.Communication.Client;
     using Microsoft.ServiceFabric.Services.Remoting;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
     using System;
     using System.Fabric;
-    using Microsoft.ServiceFabric.Actors.Query;
-    using System.Threading;
-    using System.Threading.Tasks;
 
     /// <summary>
     /// Class for creating and wrapping the actor proxy factory. This class delegates all operations to the
     /// inner <see cref="ActorProxyFactory"/> but tracks all the interfaces for which proxies were created. 
     /// </summary>
-    public class CorrelatingActorProxyFactory : CorrelatingProxyFactory, IActorProxyFactory
+    public class CorrelatingActorProxyFactory : IActorProxyFactory
     {
-        private class DummyActorService : IActorService
-        {
-            public Task DeleteActorAsync(ActorId actorId, CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
-
-            public Task<PagedResult<ActorInformation>> GetActorsAsync(ContinuationToken continuationToken, CancellationToken cancellationToken)
-            {
-                throw new NotImplementedException();
-            }
-        }
-
+        private MethodNameProvider methodNameProvider;
         private ActorProxyFactory actorProxyFactory;
 
         /// <summary>
@@ -43,8 +27,9 @@
         /// </param>
         /// <param name="retrySettings">Specifies the retry policy to use on exceptions seen when using the proxies created by this factory</param>
         public CorrelatingActorProxyFactory(ServiceContext serviceContext, Func<IServiceRemotingCallbackClient, IServiceRemotingClientFactory> createActorRemotingClientFactory = null, OperationRetrySettings retrySettings = null)
-            : base(serviceContext)
         {
+            this.methodNameProvider = new MethodNameProvider(true /* threadSafe */);
+
             // Layer the factory structure so the hierarchy will look like this:
             // CorrelatingServiceProxyFactory
             //  --> ServiceProxyFactory
@@ -53,12 +38,9 @@
             this.actorProxyFactory = new ActorProxyFactory(
                 callbackClient => {
                     IServiceRemotingClientFactory innerClientFactory = createActorRemotingClientFactory(callbackClient);
-                    return new CorrelatingServiceRemotingClientFactory(innerClientFactory, this);
+                    return new CorrelatingServiceRemotingClientFactory(innerClientFactory, this.methodNameProvider);
                 },
                 retrySettings);
-
-            // Add the canonical actor service methods, use a dummy actor service object
-            this.AddMethodsForProxy<IActorService>(new DummyActorService());
         }
 
         /// <summary>
@@ -85,7 +67,9 @@
         /// and TActorInterface.</returns>
         public TActorInterface CreateActorProxy<TActorInterface>(ActorId actorId, string applicationName = null, string serviceName = null, string listenerName = null) where TActorInterface : IActor
         {
-            return this.actorProxyFactory.CreateActorProxy<TActorInterface>(actorId, applicationName, serviceName, listenerName);
+            TActorInterface proxy = this.actorProxyFactory.CreateActorProxy<TActorInterface>(actorId, applicationName, serviceName, listenerName);
+            this.methodNameProvider.AddMethodsForProxyOrService(proxy.GetType().GetInterfaces(), typeof(IActor));
+            return proxy;
         }
 
         /// <summary>
@@ -104,7 +88,9 @@
         /// and TActorInterface.</returns>
         public TActorInterface CreateActorProxy<TActorInterface>(Uri serviceUri, ActorId actorId, string listenerName = null) where TActorInterface : IActor
         {
-            return this.actorProxyFactory.CreateActorProxy<TActorInterface>(serviceUri, actorId, listenerName);
+            TActorInterface proxy = this.actorProxyFactory.CreateActorProxy<TActorInterface>(serviceUri, actorId, listenerName);
+            this.methodNameProvider.AddMethodsForProxyOrService(proxy.GetType().GetInterfaces(), typeof(IActor));
+            return proxy;
         }
 
         /// <summary>
@@ -124,7 +110,7 @@
         public TServiceInterface CreateActorServiceProxy<TServiceInterface>(Uri serviceUri, ActorId actorId, string listenerName = null) where TServiceInterface : IService
         {
             TServiceInterface proxy = this.actorProxyFactory.CreateActorServiceProxy<TServiceInterface>(serviceUri, actorId, listenerName);
-            this.AddMethodsForProxy<TServiceInterface>(proxy);
+            this.methodNameProvider.AddMethodsForProxyOrService(proxy.GetType().GetInterfaces(), typeof(IService));
             return proxy;
         }
 
@@ -144,8 +130,8 @@
         public TServiceInterface CreateActorServiceProxy<TServiceInterface>(Uri serviceUri, long partitionKey, string listenerName = null) where TServiceInterface : IService
         {
             TServiceInterface proxy = this.actorProxyFactory.CreateActorServiceProxy<TServiceInterface>(serviceUri, partitionKey, listenerName);
-            this.AddMethodsForProxy<TServiceInterface>(proxy);
+            this.methodNameProvider.AddMethodsForProxyOrService(proxy.GetType().GetInterfaces(), typeof(IService));
             return proxy;
-        }
+        }       
     }
 }

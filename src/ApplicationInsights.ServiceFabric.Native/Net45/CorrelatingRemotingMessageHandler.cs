@@ -2,18 +2,15 @@
 {
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.DataContracts;
-    using Microsoft.ApplicationInsights.Extensibility;
+    using Microsoft.ServiceFabric.Actors;
     using Microsoft.ServiceFabric.Actors.Remoting.Runtime;
     using Microsoft.ServiceFabric.Actors.Runtime;
     using Microsoft.ServiceFabric.Services.Remoting;
-    using Microsoft.ServiceFabric.Services.Remoting.Builder;
     using Microsoft.ServiceFabric.Services.Remoting.Runtime;
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Fabric;
     using System.IO;
-    using System.Reflection;
     using System.Runtime.Serialization;
     using System.Threading.Tasks;
     using System.Xml;
@@ -28,29 +25,38 @@
 
         private IServiceRemotingMessageHandler innerHandler;
         private TelemetryClient telemetryClient;
-        private IDictionary<int, ServiceMethodDispatcherBase> methodMap;
-        private ServiceContext serviceContext;
+        private MethodNameProvider methodNameProvider;
+        private bool isActorService;
 
         /// <summary>
         /// Initializes the <see cref="CorrelatingRemotingMessageHandler"/> object. It wraps the given service for all the core
         /// operations for servicing the request.
         /// </summary>
+        /// <param name="service">The service whose remoting messages this handler should handle.</param>
+        /// <param name="serviceContext">The context object for the service.</param>
         public CorrelatingRemotingMessageHandler(ServiceContext serviceContext, IService service)
         {
+            this.InitializeCommonFields();
             this.innerHandler = new ServiceRemotingDispatcher(serviceContext, service);
-            this.serviceContext = serviceContext;
-            Initialize();
+
+            // Populate our method name provider with methods from the IService interfaces
+            this.methodNameProvider.AddMethodsForProxyOrService(service.GetType().GetInterfaces(), typeof(IService));
         }
 
         /// <summary>
         /// Initializes the <see cref="CorrelatingRemotingMessageHandler"/> object. It wraps the given actor service for all the core
         /// operations for servicing the request.
         /// </summary>
+        /// <param name="actorService">The actor service whose remoting messages this handler should handle.</param>
         public CorrelatingRemotingMessageHandler(ActorService actorService)
         {
+            this.InitializeCommonFields();
             this.innerHandler = new ActorServiceRemotingDispatcher(actorService);
-            this.serviceContext = actorService.Context;
-            Initialize();
+            this.isActorService = true;
+
+            // Populate our method name provider with methods from the ActorService interfaces, and the Actor interfaces
+            this.methodNameProvider.AddMethodsForProxyOrService(actorService.GetType().GetInterfaces(), typeof(IService));
+            this.methodNameProvider.AddMethodsForProxyOrService(actorService.ActorTypeInformation.InterfaceTypes, typeof(IActor));
         }
 
         /// <summary>
@@ -81,14 +87,11 @@
             return HandleAndTrackRequestAsync(messageHeaders, () => this.innerHandler.RequestResponseAsync(requestContext, messageHeaders, requestBody));
         }
 
-        private void Initialize()
+        private void InitializeCommonFields()
         {
             this.telemetryClient = new TelemetryClient();
             this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
-
-            // TODO: SF should expose method name without the need to use reflection
-            this.methodMap = typeof(ServiceRemotingDispatcher)?.GetField("methodDispatcherMap", BindingFlags.Instance | BindingFlags.NonPublic)
-                                ?.GetValue(this.innerHandler) as IDictionary<int, ServiceMethodDispatcherBase>;
+            this.methodNameProvider = new MethodNameProvider(false /* threadSafe */);
         }
 
         private async Task<byte[]> HandleAndTrackRequestAsync(ServiceRemotingMessageHeaders messageHeaders, Func<Task<byte[]>> doHandleRequest)
@@ -102,30 +105,31 @@
                 rt.Context.Operation.Id = GetOperationId(parentId);
             }
 
-            // Do our best effort in setting the request name. If we have the service context, add the service name. If
-            // we have the method map, add the method name to it.
-            if (this.serviceContext != null)
-            {
-                string methodName = null;
-                if (this.methodMap != null && this.methodMap.TryGetValue(messageHeaders.InterfaceId, out ServiceMethodDispatcherBase method))
-                {
-                    try
-                    {
-                        methodName = method.GetMethodName(messageHeaders.MethodId);
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                    }
-                }
+            // Do our best effort in setting the request name.
+            string methodName = null;
 
-                // Weird case, just use the numerical id as the method name
+            if (this.isActorService && messageHeaders.TryGetActorMethodAndInterfaceIds(out int methodId, out int interfaceId))
+            {
+                methodName = this.methodNameProvider.GetMethodName(interfaceId, methodId);
+
+                // Weird case, we couldn't find the method in the map. Just use the numerical id as the method name
+                if (string.IsNullOrEmpty(methodName))
+                {
+                    methodName = methodId.ToString();
+                }
+            }
+            else
+            {
+                methodName = this.methodNameProvider.GetMethodName(messageHeaders.InterfaceId, messageHeaders.MethodId);
+
+                // Weird case, we couldn't find the method in the map. Just use the numerical id as the method name
                 if (string.IsNullOrEmpty(methodName))
                 {
                     methodName = messageHeaders.MethodId.ToString();
                 }
-
-                rt.Name = methodName;
             }
+
+            rt.Name = methodName;
 
             if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationBytes))
             {
