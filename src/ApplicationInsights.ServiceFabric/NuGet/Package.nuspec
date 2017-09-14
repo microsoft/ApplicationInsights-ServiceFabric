@@ -29,6 +29,7 @@
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.config.transform" target="content" />
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.config.install.xdt" target="content" />
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NuGet\ApplicationInsights.config.uninstall.xdt" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric\NuGet\Install.ps1" target="tools" />
 
     <!-- For .NET 4.5 projects -->
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric\Net45\Microsoft.AI.ServiceFabric.dll" target="lib\net45" />
