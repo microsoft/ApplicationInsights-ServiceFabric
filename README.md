@@ -14,8 +14,8 @@ This repo provides code for a telemetry initializer (and some associated utility
 
 ## Nuget Packages
 This repository produces the following two nuget packages:
-* [**Microsoft.ApplicationInsights.ServiceFabric.Native**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric.Native/1.0.0-beta2) - For use with Service Fabric's [native reliable services](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-introduction).
-* [**Microsoft.ApplicationInsights.ServiceFabric**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric/1.0.0-beta2) - For use with [Guest Executable](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-deploy-existing-app) and [Guest container](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-containers-overview) services (lift and shift scenarios).
+* [**Microsoft.ApplicationInsights.ServiceFabric.Native**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric.Native/1.1.0-beta1) - For use with Service Fabric's [native reliable services](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-introduction).
+* [**Microsoft.ApplicationInsights.ServiceFabric**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric/1.1.0-beta1) - For use with [Guest Executable](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-deploy-existing-app) and [Guest container](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-containers-overview) services (lift and shift scenarios).
 
 ## Scope
 * This repository and the associated nuget packages, for now, only deals with `.Net Framework` and `.Net Core` applications.
@@ -138,6 +138,24 @@ The context added looks like:
 
 **Note:** `Cloud role name` and `Cloud role instance` shown in the screenshot above, represent service and service instance respectively, and are special fields in Application Insights schema that are used as aggregation units to power certain experiences like Application map.  
 
+### Trace Correlation with Service Remoting
+The Nuget package enables correlation of traces produced by Service Fabric services, regardless whether services communicate via HTTP or via Service Remoting protocol. For HttpClient, the correlation is supported implicitly. For Service Remoting, you just need to make some minor changes to your existing code and the correlation will be supported.
+1. For the service invoking the request, change how the proxy is created:
+    ```
+            // IStatelessBackendService proxy = ServiceProxy.Create<IStatelessBackendService>(new Uri(serviceUri));
+            var proxyFactory = new CorrelatingServiceProxyFactory(this.serviceContext, callbackClient => new FabricTransportServiceRemotingClientFactory(callbackClient: callbackClient));
+            IStatelessBackendService proxy = proxyFactory.CreateServiceProxy<IStatelessBackendService>(new Uri(serviceUri));
+    ```
+2. For the service receiving the request, add a message handler to the service listener:
+    ```
+        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
+        {
+            return new ServiceInstanceListener[1]
+            {
+                new ServiceInstanceListener(context => new FabricTransportServiceRemotingListener(context, new CorrelatingRemotingMessageHandler(context, this)))
+            };
+        }
+    ```
 
 ## Customizing Context:
 < to be added >

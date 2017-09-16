@@ -31,6 +31,7 @@
         /// </summary>
         /// <param name="innerClient">The client object which this client wraps.</param>
         /// <param name="serviceUri">The target Uri of the service which this client will call.</param>
+        /// <param name="methodNameProvider">The provider that helps resolve method ids into method names.</param>
         public CorrelatingServiceRemotingClient(IServiceRemotingClient innerClient, Uri serviceUri, IMethodNameProvider methodNameProvider)
         {
             if (innerClient == null)

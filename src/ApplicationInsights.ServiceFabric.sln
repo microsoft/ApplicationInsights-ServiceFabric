@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26403.7
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Net45", "ApplicationInsights.ServiceFabric\Net45\ApplicationInsights.ServiceFabric.Net45.csproj", "{00A7F547-E1D1-48B7-A5A5-0A5E061F9FC1}"
 EndProject
@@ -18,6 +18,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Native", "ApplicationInsights.ServiceFabric.Native\Net45\ApplicationInsights.ServiceFabric.Native.csproj", "{D58E6722-7F75-43F2-B04A-30F5A571ED28}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Native.NuGet", "ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.ServiceFabric.Native.NuGet.csproj", "{820D2E4F-4D2F-463F-A1B3-778526936820}"
+	ProjectSection(ProjectDependencies) = postProject
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28} = {D58E6722-7F75-43F2-B04A-30F5A571ED28}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
