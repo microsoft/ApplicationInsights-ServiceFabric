@@ -138,15 +138,15 @@ The context added looks like:
 
 **Note:** `Cloud role name` and `Cloud role instance` shown in the screenshot above, represent service and service instance respectively, and are special fields in Application Insights schema that are used as aggregation units to power certain experiences like Application map.  
 
-### Event Correlation with Service Remoting
-You will have enhanced experience with correlated events across services. If you're using HttpClient to communicate between your services, the correlation is supported implicitly. For Service Remoting, you just need to make some minor changes to your existing code and the correlation will be supported.
-1. For the service invoke the request, change how the proxy is created:
+### Trace Correlation with Service Remoting
+The Nuget package enables correlation of traces produced by Service Fabric services, regardless whether services communicate via HTTP or via Service Remoting protocol. For HttpClient, the correlation is supported implicitly. For Service Remoting, you just need to make some minor changes to your existing code and the correlation will be supported.
+1. For the service invoking the request, change how the proxy is created:
     ```
             // IStatelessBackendService proxy = ServiceProxy.Create<IStatelessBackendService>(new Uri(serviceUri));
             var proxyFactory = new CorrelatingServiceProxyFactory(this.serviceContext, callbackClient => new FabricTransportServiceRemotingClientFactory(callbackClient: callbackClient));
             IStatelessBackendService proxy = proxyFactory.CreateServiceProxy<IStatelessBackendService>(new Uri(serviceUri));
     ```
-2. For the service get called, add a message handler to the service listener
+2. For the service receiving the request, add a message handler to the service listener:
     ```
         protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
         {
