@@ -142,19 +142,19 @@ The context added looks like:
 The Nuget package enables correlation of traces produced by Service Fabric services, regardless whether services communicate via HTTP or via Service Remoting protocol. For HttpClient, the correlation is supported implicitly. For Service Remoting, you just need to make some minor changes to your existing code and the correlation will be supported.
 1. For the service invoking the request, change how the proxy is created:
     ```
-            // IStatelessBackendService proxy = ServiceProxy.Create<IStatelessBackendService>(new Uri(serviceUri));
-            var proxyFactory = new CorrelatingServiceProxyFactory(this.serviceContext, callbackClient => new FabricTransportServiceRemotingClientFactory(callbackClient: callbackClient));
-            IStatelessBackendService proxy = proxyFactory.CreateServiceProxy<IStatelessBackendService>(new Uri(serviceUri));
+    // IStatelessBackendService proxy = ServiceProxy.Create<IStatelessBackendService>(new Uri(serviceUri));
+    var proxyFactory = new CorrelatingServiceProxyFactory(this.serviceContext, callbackClient => new FabricTransportServiceRemotingClientFactory(callbackClient: callbackClient));
+    IStatelessBackendService proxy = proxyFactory.CreateServiceProxy<IStatelessBackendService>(new Uri(serviceUri));
     ```
 2. For the service receiving the request, add a message handler to the service listener:
     ```
-        protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
+    protected override IEnumerable<ServiceInstanceListener> CreateServiceInstanceListeners()
+    {
+        return new ServiceInstanceListener[1]
         {
-            return new ServiceInstanceListener[1]
-            {
-                new ServiceInstanceListener(context => new FabricTransportServiceRemotingListener(context, new CorrelatingRemotingMessageHandler(context, this)))
-            };
-        }
+            new ServiceInstanceListener(context => new FabricTransportServiceRemotingListener(context, new CorrelatingRemotingMessageHandler(context, this)))
+        };
+    }
     ```
 
 ## Customizing Context:
