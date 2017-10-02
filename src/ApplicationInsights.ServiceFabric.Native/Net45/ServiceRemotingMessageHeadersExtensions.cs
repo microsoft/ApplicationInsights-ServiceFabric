@@ -1,7 +1,7 @@
 ﻿namespace Microsoft.ApplicationInsights.ServiceFabric.Remoting.Activities
 {
-    using Microsoft.ServiceFabric.Actors.Remoting.Builder;
-    using Microsoft.ServiceFabric.Services.Remoting;
+    using Microsoft.ServiceFabric.Actors.Remoting.V1.Builder;
+    using Microsoft.ServiceFabric.Services.Remoting.V1;
     using System;
     using System.Reflection;
     using System.Text;
