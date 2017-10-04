@@ -4,6 +4,8 @@
     using Microsoft.ServiceFabric.Services.Communication.Client;
     using Microsoft.ServiceFabric.Services.Remoting;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
+    using Microsoft.ServiceFabric.Services.Remoting.V1;
+    using Microsoft.ServiceFabric.Services.Remoting.V1.Client;
     using System;
     using System.Fabric;
 

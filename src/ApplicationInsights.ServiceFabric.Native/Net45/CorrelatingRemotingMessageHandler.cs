@@ -3,10 +3,11 @@
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.DataContracts;
     using Microsoft.ServiceFabric.Actors;
-    using Microsoft.ServiceFabric.Actors.Remoting.Runtime;
+    using Microsoft.ServiceFabric.Actors.Remoting.V1.Runtime;
     using Microsoft.ServiceFabric.Actors.Runtime;
     using Microsoft.ServiceFabric.Services.Remoting;
-    using Microsoft.ServiceFabric.Services.Remoting.Runtime;
+    using Microsoft.ServiceFabric.Services.Remoting.V1;
+    using Microsoft.ServiceFabric.Services.Remoting.V1.Runtime;
     using System;
     using System.Collections.Generic;
     using System.Fabric;

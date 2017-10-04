@@ -19,7 +19,8 @@
     <dependencies>
       <group targetFramework="net45">
         <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
-        <dependency id="Microsoft.ServiceFabric" version="5.0.135" />
+        <dependency id="Microsoft.ServiceFabric" version="6.0.0" />
+        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="2.8.0" />
         <dependency id="Microsoft.ApplicationInsights.ServiceFabric" version="$version$"/>
       </group>
     </dependencies>
