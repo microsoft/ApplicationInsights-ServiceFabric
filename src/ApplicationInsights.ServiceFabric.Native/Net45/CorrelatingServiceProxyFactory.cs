@@ -11,7 +11,7 @@
 
     /// <summary>
     /// Class for creating and wrapping the service proxy factory. This class delegates all operations to the
-    /// inner <see cref="ServiceProxyFactory"/> but tracks all the interfaces for which proxies were created. 
+    /// inner <see cref="Microsoft.ServiceFabric.Services.Remoting.V1.Client.ServiceProxyFactory"/> but tracks all the interfaces for which proxies were created.
     /// </summary>
     public class CorrelatingServiceProxyFactory : IServiceProxyFactory
     {
