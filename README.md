@@ -14,8 +14,8 @@ This repo provides code for a telemetry initializer (and some associated utility
 
 ## Nuget Packages
 This repository produces the following two nuget packages:
-* [**Microsoft.ApplicationInsights.ServiceFabric.Native**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric.Native/1.1.0-beta1) - For use with Service Fabric's [native reliable services](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-introduction).
-* [**Microsoft.ApplicationInsights.ServiceFabric**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric/1.1.0-beta1) - For use with [Guest Executable](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-deploy-existing-app) and [Guest container](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-containers-overview) services (lift and shift scenarios).
+* [**Microsoft.ApplicationInsights.ServiceFabric.Native**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric.Native/2.0.0-beta1) - For use with Service Fabric's [native reliable services](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-introduction).
+* [**Microsoft.ApplicationInsights.ServiceFabric**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric/2.0.0-beta1) - For use with [Guest Executable](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-deploy-existing-app) and [Guest container](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-containers-overview) services (lift and shift scenarios).
 
 ## Scope
 * This repository and the associated nuget packages, for now, only deals with `.Net Framework` and `.Net Core` applications.
