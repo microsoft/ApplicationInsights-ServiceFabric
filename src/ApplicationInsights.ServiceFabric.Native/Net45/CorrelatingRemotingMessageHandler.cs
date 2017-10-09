@@ -20,7 +20,7 @@
     /// Service remoting handler that wraps a service and parses correlation id and context, if they have been passed by the caller as
     /// message headers. This allows traces the client and the service to log traces with the same relevant correlation id and context.
     /// </summary>
-    public class CorrelatingRemotingMessageHandler : IServiceRemotingMessageHandler
+    public class CorrelatingRemotingMessageHandler : IServiceRemotingMessageHandler, IDisposable
     {
         private Lazy<DataContractSerializer> baggageSerializer;
 
@@ -184,5 +184,39 @@
             int rootStart = id[0] == '|' ? 1 : 0;
             return id.Substring(rootStart, rootEnd - rootStart);
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        /// <summary>
+        /// Overridden by derived class to dispose and clean up resources used by <see cref="CorrelatingRemotingMessageHandler"/>.
+        /// </summary>
+        /// <param name="disposing">Whether it should dispose managed resources.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    IDisposable disposableHandler = this.innerHandler as IDisposable;
+                    if (disposableHandler != null)
+                    {
+                        disposableHandler.Dispose();
+                    }
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        /// <summary>
+        /// Dispose and clean up resources used by <see cref="CorrelatingRemotingMessageHandler"/>
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion // IDisposable Support
     }
 }
