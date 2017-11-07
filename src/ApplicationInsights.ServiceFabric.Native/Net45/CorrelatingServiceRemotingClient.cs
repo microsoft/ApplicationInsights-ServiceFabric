@@ -128,18 +128,22 @@
 
             try
             {
-                messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
-
-                // We expect the baggage to not be there at all or just contain a few small items
-                Activity currentActivity = Activity.Current;
-                if (currentActivity.Baggage.Any())
+                if (!messageHeaders.ContainsHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName) &&
+                    !messageHeaders.ContainsHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName))
                 {
-                    using (var ms = new MemoryStream())
+                    messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
+
+                    // We expect the baggage to not be there at all or just contain a few small items
+                    Activity currentActivity = Activity.Current;
+                    if (currentActivity.Baggage.Any())
                     {
-                        var dictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(ms);
-                        this.baggageSerializer.Value.WriteObject(dictionaryWriter, currentActivity.Baggage);
-                        dictionaryWriter.Flush();
-                        messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, ms.GetBuffer());
+                        using (var ms = new MemoryStream())
+                        {
+                            var dictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(ms);
+                            this.baggageSerializer.Value.WriteObject(dictionaryWriter, currentActivity.Baggage);
+                            dictionaryWriter.Flush();
+                            messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, ms.GetBuffer());
+                        }
                     }
                 }
 
