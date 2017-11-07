@@ -58,6 +58,11 @@
             }
         }
 
+        public static bool ContainsHeader(this ServiceRemotingMessageHeaders messageHeaders, string headerName)
+        {
+            return messageHeaders.TryGetHeaderValue(headerName, out byte[] headerValueBytes);
+        }
+
         public static bool TryGetHeaderValue(this ServiceRemotingMessageHeaders messageHeaders, string headerName, out string headerValue)
         {
             headerValue = null;
