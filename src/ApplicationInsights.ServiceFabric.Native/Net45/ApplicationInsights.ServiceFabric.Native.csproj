@@ -89,6 +89,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodePackageVersionTelemetryInitializer.cs" />
     <Compile Include="CorrelatingRemotingMessageHandler.cs" />
     <Compile Include="CorrelatingActorProxyFactory.cs" />
     <Compile Include="CorrelatingServiceProxyFactory.cs" />

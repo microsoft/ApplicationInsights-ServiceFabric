@@ -156,6 +156,12 @@ The Nuget package enables correlation of traces produced by Service Fabric servi
         };
     }
     ```
+### Enrich telemetry with Component Version
+In order to have telemetry enriched with component version based on the code package version of the Service Fabric Reliable Service, add the following xml snippet to the ```<TelemetryInitializers>``` section:
+
+```<Add Type="Microsoft.ApplicationInsights.ServiceFabric.CodePackageVersionTelemetryInitializer, Microsoft.AI.ServiceFabric.Native"/>```
+
+Adding component version to telemetry items makes it possible to track telemetry across different versions of running services.
 
 ## Customizing Context:
 < to be added >
