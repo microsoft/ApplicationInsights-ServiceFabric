@@ -11,6 +11,11 @@
     public class CodePackageVersionTelemetryInitializer : ITelemetryInitializer
     {
         /// <summary>
+        /// The code package version for this component.
+        /// </summary>
+        private string codePackageVersion;
+
+        /// <summary>
         /// Initializes component version of the telemetry item with the code package version from the Service Fabric runtime activation context.
         /// </summary>
         /// <param name="telemetry">The telemetry context to initialize.</param>
@@ -23,8 +28,13 @@
 
             if (telemetry.Context?.Component != null && string.IsNullOrEmpty(telemetry.Context.Component.Version))
             {
-                var activationContext = FabricRuntime.GetActivationContext();
-                telemetry.Context.Component.Version = activationContext.CodePackageVersion;
+                if (string.IsNullOrEmpty(codePackageVersion))
+                {
+                    var activationContext = FabricRuntime.GetActivationContext();
+                    codePackageVersion = activationContext.CodePackageVersion;
+                }
+
+                telemetry.Context.Component.Version = codePackageVersion;
             }
         }
     }
