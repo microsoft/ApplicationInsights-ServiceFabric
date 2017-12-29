@@ -83,6 +83,36 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             this.WriteEvent(7, error, this.ApplicationName);
         }
 
+        [Event(
+            8,
+            Keywords = Keywords.Diagnostics,
+            Message = "Failed to determine cross component correlation header. Error: {0}",
+            Level = EventLevel.Warning)]
+        public void GetCrossComponentCorrelationHeaderFailed(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(8, error, this.ApplicationName);
+        }
+
+        [Event(
+            9,
+            Keywords = Keywords.Diagnostics,
+            Message = "Failed to determine role name header. Error: {0}",
+            Level = EventLevel.Warning)]
+        public void GetComponentRoleNameHeaderFailed(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(9, error, this.ApplicationName);
+        }
+
+        [Event(
+            10,
+            Keywords = Keywords.Diagnostics,
+            Message = "Failed to add cross component correlation header. Error: {0}",
+            Level = EventLevel.Warning)]
+        public void SetCrossComponentCorrelationHeaderFailed(string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(10, error, this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {
@@ -98,7 +128,6 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 
             return name;
         }
-
     }
 
     /// <summary>

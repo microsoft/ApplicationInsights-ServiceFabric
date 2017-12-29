@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.Service
 		{A14C1A81-A954-45EB-B985-D14A109233F6} = {A14C1A81-A954-45EB-B985-D14A109233F6}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.NetStandard", "ApplicationInsights.ServiceFabric\NetStandard\ApplicationInsights.ServiceFabric.NetStandard.csproj", "{A14C1A81-A954-45EB-B985-D14A109233F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationInsights.ServiceFabric.NetStandard", "ApplicationInsights.ServiceFabric\NetStandard\ApplicationInsights.ServiceFabric.NetStandard.csproj", "{A14C1A81-A954-45EB-B985-D14A109233F6}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ApplicationInsights.ServiceFabric.Shared", "ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.shproj", "{782AB255-A812-4517-9BA7-191EDEBC0938}"
 EndProject
@@ -55,5 +55,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EE087372-F0AD-407E-9478-70B275F4C560}
 	EndGlobalSection
 EndGlobal

@@ -13,12 +13,10 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
     /// </summary>
     public class ServiceRemotingDependencyTrackingTelemetryModule : ITelemetryModule
     {
-        private ServiceRemotingDiagnosticSourceListener _serviceRemotingDiagnosticSourceListener;
+        private ServiceRemotingClientEventListener _serviceRemotingClientEventListener;
         private bool _correlationHeadersEnabled = true;
         private string _telemetryChannelEnpoint;
         private TelemetryClient _telemetryClient;
-
-        // Todo (nizarq): Is it worth moving correlation up into base sdk?
 
         /// <summary>
         /// Gets or sets a value indicating whether the component correlation headers would be set on service remoting responses.
@@ -68,7 +66,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 _telemetryChannelEnpoint = configuration.TelemetryChannel.EndpointAddress;
             }
 
-            _serviceRemotingDiagnosticSourceListener = new ServiceRemotingDiagnosticSourceListener(
+            _serviceRemotingClientEventListener = new ServiceRemotingClientEventListener(
                                 configuration,
                                 this.EffectiveProfileQueryEndpoint,
                                 this.SetComponentCorrelationHttpHeaders);
