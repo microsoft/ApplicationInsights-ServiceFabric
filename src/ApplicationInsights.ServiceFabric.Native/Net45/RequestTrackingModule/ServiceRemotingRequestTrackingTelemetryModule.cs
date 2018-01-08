@@ -13,7 +13,6 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
     /// </summary>
     public class ServiceRemotingRequestTrackingTelemetryModule : ITelemetryModule
     {
-        private TelemetryConfiguration _telemetryConfiguration;
         private ServiceRemotingServerEventListener _serviceRemotingServerEventListener;
         private bool _correlationHeadersEnabled = true;
         private string _telemetryChannelEnpoint;

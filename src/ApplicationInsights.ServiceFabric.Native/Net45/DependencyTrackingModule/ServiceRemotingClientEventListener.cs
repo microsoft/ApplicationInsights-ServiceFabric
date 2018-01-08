@@ -28,7 +28,6 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         private readonly ICorrelationIdLookupHelper correlationIdLookupHelper;
         private readonly TelemetryClient client;
         private readonly TelemetryConfiguration configuration;
-        private Lazy<DataContractSerializer> baggageSerializer;
         private ConcurrentDictionary<IServiceRemotingRequestMessage, IOperationHolder<DependencyTelemetry>> pendingTelemetry = new ConcurrentDictionary<IServiceRemotingRequestMessage, IOperationHolder<DependencyTelemetry>>();
 
 
@@ -36,21 +35,19 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             TelemetryConfiguration configuration,
             string effectiveProfileQueryEndpoint,
             bool setComponentCorrelationHttpHeaders,
-            IEnumerable<string> correlationDomainExclusionList = null,  // todo (nizarq): see if we need this and next
+            IEnumerable<string> correlationDomainExclusionList = null,
             ICorrelationIdLookupHelper correlationIdLookupHelper = null)
         {
             this.client = new TelemetryClient(configuration);
-            this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rdddc:"); // rdddc represents remote dependency based on diagnostic source 
+            this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rdddc:"); // Todo (nizarq): rdddc represents remote dependency based on diagnostic source. Do we need to change that.
 
             this.configuration = configuration;
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
             this.correlationIdLookupHelper = correlationIdLookupHelper ?? new CorrelationIdLookupHelper(effectiveProfileQueryEndpoint);
             this.correlationDomainExclusionList = correlationDomainExclusionList ?? Enumerable.Empty<string>();
-            this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
 
             ServiceRemotingClientEvents.SendRequest += ServiceRemotingClientEvents_SendRequest;
             ServiceRemotingClientEvents.ReceiveResponse += ServiceRemotingClientEvents_ReceiveResponse;
-
         }
 
         private void ServiceRemotingClientEvents_SendRequest(object sender, EventArgs e)
@@ -61,16 +58,23 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 
                 if (eventArgs == null)
                 {
-                    // Todo (nizarq) : Log
+                    ServiceFabricSDKEventSource.Log.InvalidEventArgument((typeof(ServiceRemotingRequestEventArgs)).Name, e.GetType().Name);
                     return;
                 }
 
                 IService service = (IService)sender;
                 var request = eventArgs.Request;
+                var messageHeaders = request?.GetHeader();
+
+                // If there are no header objects passed in, we don't do anything.
+                if (messageHeaders == null)
+                {
+                    ServiceFabricSDKEventSource.Log.HeadersNotFound();
+                    return;
+                }
+
                 var serviceUri = eventArgs.ServiceUri;
                 var methodName = eventArgs.MethodName;
-
-                var messageHeaders = request.GetHeader();
 
                 // Weird case, just use the numerical id as the method name
                 if (string.IsNullOrEmpty(methodName))
@@ -86,81 +90,103 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 operation.Telemetry.Data = serviceUri.AbsoluteUri + "/" + methodName;
                 operation.Telemetry.Target = serviceUri.AbsoluteUri;
 
-                // Todo (nizarq): There is a potential for this dictionary to grow crazy big.
                 pendingTelemetry[request] = operation;
 
                 if (!messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out byte[] parentIdHeaderValue) &&
                     !messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationContextHeaderValue))
                 {
                     messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
-
-                    // We expect the baggage to not be there at all or just contain a few small items
-                    Activity currentActivity = Activity.Current;
-                    if (currentActivity.Baggage.Any())
+                    byte[] baggageFromActivity = RequestTrackingUtils.GetBaggageFromActivity();
+                    if (baggageFromActivity != null)
                     {
-                        using (var ms = new MemoryStream())
-                        {
-                            var dictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(ms);
-                            this.baggageSerializer.Value.WriteObject(dictionaryWriter, currentActivity.Baggage);
-                            dictionaryWriter.Flush();
-                            messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, ms.GetBuffer());
-                        }
+                        messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, baggageFromActivity);
                     }
-                }
+               }
 
                 InjectXComponentHeaders(messageHeaders, serviceUri);
             }
-            catch
+            catch(Exception ex)
             {
                 // We failed to add the header or activity, let's move on, let's not crash user's application because of that.
-                // Todo (nizarq): Log this somewhere.
+                ServiceFabricSDKEventSource.Log.FailedToHandleEvent("ServiceRemotingClientEvents.SendRequest", ex.ToInvariantString());
             }
         }
 
         private void ServiceRemotingClientEvents_ReceiveResponse(object sender, EventArgs e)
         {
-            ServiceRemotingResponseEventArgs arg = e as ServiceRemotingResponseEventArgs;
-
-            if (arg == null)
+            try
             {
-                // Todo (nizarq): Log
+                ServiceRemotingResponseEventArgs successfulResponseArg = e as ServiceRemotingResponseEventArgs;
+                ServiceRemotingFailedResponseEventArgs failedResponseArg = e as ServiceRemotingFailedResponseEventArgs;
+
+                bool requestStateSuccessful;
+                IServiceRemotingRequestMessage request;
+
+                if (successfulResponseArg != null)
+                {
+                    // Successful Request
+                    requestStateSuccessful = true;
+                    request = successfulResponseArg.Request;
+                }
+                else if (failedResponseArg != null)
+                {
+                    requestStateSuccessful = false;
+                    request = failedResponseArg.Request;
+                }
+                else
+                {
+                    ServiceFabricSDKEventSource.Log.InvalidEventArgument((typeof(ServiceRemotingResponseEventArgs)).Name, e.GetType().Name);
+                    return;
+                }
+
+                IOperationHolder<DependencyTelemetry> dependencyOperation;
+                if (pendingTelemetry.TryGetValue(request, out dependencyOperation))
+                {
+                    // As of now, are not encapsulated by the platform in IServiceRemotingResponseMessage. Hence we only deal with x-compnent headers in the case of successful call.
+                    if (requestStateSuccessful)
+                    {
+                        UpdateTelemetryBasedOnXComponentResponseHeaders(successfulResponseArg.Response, dependencyOperation.Telemetry);
+                    }
+
+                    dependencyOperation.Telemetry.Success = requestStateSuccessful;
+                    // Stopping the operation, this will also pop the activity created by StartOperation off the activity stack.
+                    client.StopOperation(dependencyOperation);
+                }
+            }
+            catch (Exception ex)
+            {
+                // We failed to add the header or activity, let's move on, let's not crash user's application because of that.
+                ServiceFabricSDKEventSource.Log.FailedToHandleEvent("ServiceRemotingClientEvents.ReceiveResponse", ex.ToInvariantString());
+            }
+        }
+
+        #region X-Component Correlation helper methods.
+        private void UpdateTelemetryBasedOnXComponentResponseHeaders(IServiceRemotingResponseMessage response, DependencyTelemetry dependencyTelemetry)
+        {
+            if (response == null || response.GetHeader() == null)
+            {
                 return;
             }
 
-            var request = arg.Request;
-            var response = arg.Response;
-
-            IOperationHolder<DependencyTelemetry> dependencyOperation;
-            if (pendingTelemetry.TryGetValue(request, out dependencyOperation))
+            try
             {
-                // Todo (nizarq): Handle exception response.
-                // Is there a way to tell whether remote sent an exception, so we add a failed request, or whether something went wrong before remote call was made so we add a exception telemetry.
-
-                try
+                string targetApplicationId = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(response.GetHeader(), RequestResponseHeaders.RequestContextCorrelationTargetKey);
+                if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(dependencyTelemetry.Context.InstrumentationKey))
                 {
-                    string targetApplicationId = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(response.GetHeader(), RequestResponseHeaders.RequestContextCorrelationTargetKey);
-                    if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(dependencyOperation.Telemetry.Context.InstrumentationKey))
+                    // We only add the cross component correlation key if the key does not represent the current component.
+                    string sourceApplicationId;
+                    if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(dependencyTelemetry.Context.InstrumentationKey, out sourceApplicationId) &&
+                        targetApplicationId != sourceApplicationId)
                     {
-                        // We only add the cross component correlation key if the key does not represent the current component.
-                        string sourceApplicationId;
-                        if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(dependencyOperation.Telemetry.Context.InstrumentationKey, out sourceApplicationId) &&
-                            targetApplicationId != sourceApplicationId)
-                        {
-                            dependencyOperation.Telemetry.Type = ServiceRemotingLoggingStrings.ServiceRemotingTypeNameTracked;
-                            dependencyOperation.Telemetry.Target += " | " + targetApplicationId;
-                        }
+                        dependencyTelemetry.Type = ServiceRemotingLoggingStrings.ServiceRemotingTypeNameTracked;
+                        dependencyTelemetry.Target += " | " + targetApplicationId;
                     }
                 }
-                catch (Exception ex)
-                {
-                    ServiceFabricSDKEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(ex));
-                }
-
-
-                // Stopping the operation, this will also pop the activity created by StartOperation off the activity stack.
-                client.StopOperation(dependencyOperation);
             }
-
+            catch (Exception ex)
+            {
+                ServiceFabricSDKEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(ex));
+            }
         }
 
         private void InjectXComponentHeaders(IServiceRemotingRequestMessageHeader requestHeaders, Uri serviceUri)
@@ -192,6 +218,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 ServiceFabricSDKEventSource.Log.UnknownError(ExceptionUtilities.GetExceptionDetailString(e));
             }
         }
+        #endregion
 
         #region IDisposable Support
         private bool disposedValue = false; // To detect redundant calls

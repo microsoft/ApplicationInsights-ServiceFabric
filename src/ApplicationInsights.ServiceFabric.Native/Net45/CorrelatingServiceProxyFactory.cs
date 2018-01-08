@@ -4,8 +4,6 @@
     using Microsoft.ServiceFabric.Services.Communication.Client;
     using Microsoft.ServiceFabric.Services.Remoting;
     using Microsoft.ServiceFabric.Services.Remoting.Client;
-    using Microsoft.ServiceFabric.Services.Remoting.V1;
-    using Microsoft.ServiceFabric.Services.Remoting.V1.Client;
     using System;
     using System.Fabric;
 
@@ -27,7 +25,7 @@
         /// is cached in the ServiceProxyFactory.
         /// </param>
         /// <param name="retrySettings">Specifies the retry policy to use on exceptions seen when using the proxies created by this factory</param>
-        public CorrelatingServiceProxyFactory(ServiceContext serviceContext, Func<IServiceRemotingCallbackClient, IServiceRemotingClientFactory> createServiceRemotingClientFactory = null, OperationRetrySettings retrySettings = null)
+        public CorrelatingServiceProxyFactory(ServiceContext serviceContext, Func<Microsoft.ServiceFabric.Services.Remoting.V1.IServiceRemotingCallbackClient, Microsoft.ServiceFabric.Services.Remoting.V1.Client.IServiceRemotingClientFactory> createServiceRemotingClientFactory = null, OperationRetrySettings retrySettings = null)
         {
             this.methodNameProvider = new MethodNameProvider(true /* threadSafe */);
 
@@ -38,7 +36,7 @@
             //          --> <Factory created by createServcieRemotingClientFactory>
             this.serviceProxyFactory = new ServiceProxyFactory(
                 callbackClient => {
-                    IServiceRemotingClientFactory innerClientFactory = createServiceRemotingClientFactory(callbackClient);
+                    Microsoft.ServiceFabric.Services.Remoting.V1.Client.IServiceRemotingClientFactory innerClientFactory = createServiceRemotingClientFactory(callbackClient);
                     return new CorrelatingServiceRemotingClientFactory(innerClientFactory, this.methodNameProvider);
                 },
                 retrySettings);

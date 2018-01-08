@@ -113,6 +113,36 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             this.WriteEvent(10, error, this.ApplicationName);
         }
 
+        [Event(
+            11,
+            Keywords = Keywords.Diagnostics,
+            Message = "Invalid Event Argument type. Expected: {0}, Received: {1}",
+            Level = EventLevel.Error)]
+        public void InvalidEventArgument(string expectedType, string receivedType, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(11, expectedType, receivedType, this.ApplicationName);
+        }
+
+        [Event(
+            12,
+            Keywords = Keywords.Diagnostics,
+            Message = "No headers detected for the request.",
+            Level = EventLevel.Warning)]
+        public void HeadersNotFound(string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(12, this.ApplicationName);
+        }
+
+        [Event(
+            13,
+            Keywords = Keywords.Diagnostics,
+            Message = "Failed to handle event {0}. Excepton: {1}",
+            Level = EventLevel.Warning)]
+        public void FailedToHandleEvent(string eventName, string error, string appDomainName = "Incorrect")
+        {
+            this.WriteEvent(13, eventName, error, this.ApplicationName);
+        }
+
         [NonEvent]
         private string GetApplicationName()
         {

@@ -21,7 +21,6 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         private string effectiveProfileQueryEndpoint;
         private bool setComponentCorrelationHttpHeaders;
         private readonly ICorrelationIdLookupHelper correlationIdLookupHelper;
-        private readonly Lazy<DataContractSerializer> baggageSerializer;
         private ConcurrentDictionary<IServiceRemotingRequestMessage, IOperationHolder<RequestTelemetry>> pendingTelemetry = new ConcurrentDictionary<IServiceRemotingRequestMessage, IOperationHolder<RequestTelemetry>>();
 
         public ServiceRemotingServerEventListener(TelemetryConfiguration configuration, string effectiveProfileQueryEndpoint, bool setComponentCorrelationHttpHeaders, ICorrelationIdLookupHelper correlationIdLookupHelper = null)
@@ -31,8 +30,6 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             this.effectiveProfileQueryEndpoint = effectiveProfileQueryEndpoint;
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
             this.correlationIdLookupHelper = correlationIdLookupHelper ?? new CorrelationIdLookupHelper(effectiveProfileQueryEndpoint);
-            this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
-
 
             ServiceRemotingServiceEvents.ReceiveRequest += ServiceRemotingServiceEvents_ReceiveRequest;
             ServiceRemotingServiceEvents.SendResponse += ServiceRemotingServiceEvents_SendResponse;
@@ -40,167 +37,172 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 
         private void ServiceRemotingServiceEvents_ReceiveRequest(object sender, EventArgs e)
         {
-            ServiceRemotingRequestEventArgs eventArgs = e as ServiceRemotingRequestEventArgs;
-
-            if (eventArgs == null)
+            try
             {
-                // Todo (nizarq): Log
-                return;
-            }
+                ServiceRemotingRequestEventArgs eventArgs = e as ServiceRemotingRequestEventArgs;
 
-            var request = eventArgs.Request;
-            var messageHeaders = request.GetHeader();
-            string methodName = eventArgs.MethodName;
-
-            // Create and prepare activity and RequestTelemetry objects to track this request.
-            RequestTelemetry rt = new RequestTelemetry();
-            this.client.Initialize(rt);
-
-            if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out string parentId))
-            {
-                rt.Context.Operation.ParentId = parentId;
-                rt.Context.Operation.Id = GetOperationId(parentId);
-            }
-
-            rt.Name = methodName;
-
-            if (messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationBytes))
-            {
-                var baggageBytesStream = new MemoryStream(correlationBytes, writable: false);
-                var dictionaryReader = XmlDictionaryReader.CreateBinaryReader(baggageBytesStream, XmlDictionaryReaderQuotas.Max);
-                var baggage = this.baggageSerializer.Value.ReadObject(dictionaryReader) as IEnumerable<KeyValuePair<string, string>>;
-                foreach (KeyValuePair<string, string> pair in baggage)
+                if (eventArgs == null)
                 {
-                    rt.Context.Properties.Add(pair.Key, pair.Value);
-                }
-            }
-
-            if (string.IsNullOrEmpty(rt.Source) && messageHeaders != null)
-            {
-                string telemetrySource = string.Empty;
-                string sourceAppId = null;
-
-                try
-                {
-                    sourceAppId = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(messageHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey);
-                }
-                catch (Exception ex)
-                {
-                    ServiceFabricSDKEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                    ServiceFabricSDKEventSource.Log.InvalidEventArgument((typeof(ServiceRemotingRequestEventArgs)).Name, e.GetType().Name);
+                    return;
                 }
 
-                string currentComponentAppId = string.Empty;
-                bool foundMyAppId = false;
-                if (!string.IsNullOrEmpty(rt.Context.InstrumentationKey))
+                var request = eventArgs.Request;
+                var messageHeaders = request?.GetHeader();
+
+                // If there are no header objects passed in, we don't do anything.
+                if (messageHeaders == null)
                 {
-                    foundMyAppId = this.correlationIdLookupHelper.TryGetXComponentCorrelationId(rt.Context.InstrumentationKey, out currentComponentAppId);
+                    ServiceFabricSDKEventSource.Log.HeadersNotFound();
+                    return;
                 }
 
-                // If the source header is present on the incoming request,
-                // and it is an external component (not the same ikey as the one used by the current component),
-                // then populate the source field.
-                if (!string.IsNullOrEmpty(sourceAppId)
-                    && foundMyAppId
-                    && sourceAppId != currentComponentAppId)
-                {
-                    telemetrySource = sourceAppId;
-                }
+                string methodName = eventArgs.MethodName;
 
-                string sourceRoleName = null;
+                // Create and prepare activity and RequestTelemetry objects to track this request.
+                RequestTelemetry rt = new RequestTelemetry();
+                this.client.Initialize(rt);
 
-                try
-                {
-                    sourceRoleName = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(messageHeaders, RequestResponseHeaders.RequestContextSourceRoleNameKey);
-                }
-                catch (Exception ex)
-                {
-                    ServiceFabricSDKEventSource.Log.GetComponentRoleNameHeaderFailed(ex.ToInvariantString());
-                }
+                string parentId = messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out parentId) ? parentId : null;
+                byte[] correlationBytes = messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out correlationBytes) ? correlationBytes : null;
 
-                if (!string.IsNullOrEmpty(sourceRoleName))
+                RequestTrackingUtils.UpdateTelemetryBasedOnCorrelationContext(rt, methodName, parentId, correlationBytes);
+
+                if (string.IsNullOrEmpty(rt.Source) && messageHeaders != null)
                 {
-                    if (string.IsNullOrEmpty(telemetrySource))
+                    string telemetrySource = string.Empty;
+                    string sourceAppId = null;
+
+                    try
                     {
-                        telemetrySource = "roleName:" + sourceRoleName;
+                        sourceAppId = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(messageHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey);
                     }
-                    else
+                    catch (Exception ex)
                     {
-                        telemetrySource += " | roleName:" + sourceRoleName;
+                        ServiceFabricSDKEventSource.Log.GetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
                     }
+
+                    string currentComponentAppId = string.Empty;
+                    bool foundMyAppId = false;
+                    if (!string.IsNullOrEmpty(rt.Context.InstrumentationKey))
+                    {
+                        foundMyAppId = this.correlationIdLookupHelper.TryGetXComponentCorrelationId(rt.Context.InstrumentationKey, out currentComponentAppId);
+                    }
+
+                    // If the source header is present on the incoming request,
+                    // and it is an external component (not the same ikey as the one used by the current component),
+                    // then populate the source field.
+                    if (!string.IsNullOrEmpty(sourceAppId)
+                        && foundMyAppId
+                        && sourceAppId != currentComponentAppId)
+                    {
+                        telemetrySource = sourceAppId;
+                    }
+
+                    string sourceRoleName = null;
+
+                    try
+                    {
+                        sourceRoleName = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(messageHeaders, RequestResponseHeaders.RequestContextSourceRoleNameKey);
+                    }
+                    catch (Exception ex)
+                    {
+                        ServiceFabricSDKEventSource.Log.GetComponentRoleNameHeaderFailed(ex.ToInvariantString());
+                    }
+
+                    if (!string.IsNullOrEmpty(sourceRoleName))
+                    {
+                        if (string.IsNullOrEmpty(telemetrySource))
+                        {
+                            telemetrySource = "roleName:" + sourceRoleName;
+                        }
+                        else
+                        {
+                            telemetrySource += " | roleName:" + sourceRoleName;
+                        }
+                    }
+
+                    rt.Source = telemetrySource;
                 }
 
-                rt.Source = telemetrySource;
+                // Call StartOperation, this will create a new activity with the current activity being the parent.
+                // Since service remoting doesn't really have an URL like HTTP URL, we will do our best approximate that for
+                // the Name, Type, Data, and Target properties
+                var operation = this.client.StartOperation<RequestTelemetry>(rt);
+
+                pendingTelemetry[request] = operation;
             }
-
-            // Call StartOperation, this will create a new activity with the current activity being the parent.
-            // Since service remoting doesn't really have an URL like HTTP URL, we will do our best approximate that for
-            // the Name, Type, Data, and Target properties
-            var operation = this.client.StartOperation<RequestTelemetry>(rt);
-
-            // Todo (nizarq): There is a potential for this dictionary to grow crazy big.
-            pendingTelemetry[request] = operation;
+            catch(Exception ex)
+            {
+                // We failed to read the header or generate activity, let's move on, let's not crash user's application because of that.
+                ServiceFabricSDKEventSource.Log.FailedToHandleEvent("ServiceRemotingServiceEvents.ReceiveRequest", ex.ToInvariantString());
+            }
         }
 
         private void ServiceRemotingServiceEvents_SendResponse(object sender, EventArgs e)
         {
-            ServiceRemotingResponseEventArgs arg = e as ServiceRemotingResponseEventArgs;
-
-            if (arg == null)
-            {
-                // Todo (nizarq): Log
-                return;
-            }
-
-            var request = arg.Request;
-            var response = arg.Response;
-
-            var responseHeaders = response.GetHeader();
-
-            // Todo (nizarq): Determine whether response was success or failure.
-
-            IOperationHolder<RequestTelemetry> requestOperation;
-            if (pendingTelemetry.TryGetValue(request, out requestOperation))
-            {
-                client.StopOperation(requestOperation);
-            }
-
             try
             {
-                if (!string.IsNullOrEmpty(requestOperation.Telemetry.Context.InstrumentationKey)
-                    && ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(responseHeaders, RequestResponseHeaders.RequestContextCorrelationTargetKey) == null)
-                {
-                    string correlationId;
+                ServiceRemotingResponseEventArgs successfulResponseArg = e as ServiceRemotingResponseEventArgs;
+                ServiceRemotingFailedResponseEventArgs failedResponseArg = e as ServiceRemotingFailedResponseEventArgs;
 
-                    if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(requestOperation.Telemetry.Context.InstrumentationKey, out correlationId))
+                IServiceRemotingRequestMessage request;
+                bool requestStateSuccessful;
+
+                if (successfulResponseArg != null)
+                {
+                    request = successfulResponseArg.Request;
+                    requestStateSuccessful = true;
+                }
+                else if (failedResponseArg != null)
+                {
+                    request = failedResponseArg.Request;
+                    requestStateSuccessful = false;
+                }
+                else
+                {
+                    ServiceFabricSDKEventSource.Log.InvalidEventArgument((typeof(ServiceRemotingResponseEventArgs)).Name, e.GetType().Name);
+                    return;
+                }
+
+                IOperationHolder<RequestTelemetry> requestOperation;
+                if (pendingTelemetry.TryGetValue(request, out requestOperation))
+                {
+                    requestOperation.Telemetry.Success = requestStateSuccessful;
+                    client.StopOperation(requestOperation);
+                }
+
+                if (requestStateSuccessful)
+                {
+                    try
                     {
-                        ServiceRemotingHeaderUtilities.SetRequestContextKeyValue(responseHeaders, RequestResponseHeaders.RequestContextCorrelationTargetKey, correlationId);
+
+                        // For now, the platform doesn't support headers for exception responses, so we will for now, not try to add x-component headers for failed responses.
+                        var response = successfulResponseArg.Response;
+
+                        var responseHeaders = response.GetHeader();
+
+                        if (!string.IsNullOrEmpty(requestOperation.Telemetry.Context.InstrumentationKey)
+                            && ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(responseHeaders, RequestResponseHeaders.RequestContextCorrelationTargetKey) == null)
+                        {
+                            string correlationId;
+
+                            if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(requestOperation.Telemetry.Context.InstrumentationKey, out correlationId))
+                            {
+                                ServiceRemotingHeaderUtilities.SetRequestContextKeyValue(responseHeaders, RequestResponseHeaders.RequestContextCorrelationTargetKey, correlationId);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ServiceFabricSDKEventSource.Log.SetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
                     }
                 }
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                ServiceFabricSDKEventSource.Log.SetCrossComponentCorrelationHeaderFailed(ex.ToInvariantString());
+                ServiceFabricSDKEventSource.Log.FailedToHandleEvent("ServiceRemotingServiceEvents.SendResponse", ex.ToInvariantString());
             }
-        }
-
-        // Todo (nizarq): Refactor out to common class - V1 based CorrelatingRemotingMessageHandler.cs also contains this
-        /// <summary>
-        /// Gets the operation Id from the request Id: substring between '|' and first '.'.
-        /// </summary>
-        /// <param name="id">Id to get the operation id from.</param>
-        private static string GetOperationId(string id)
-        {
-            // id MAY start with '|' and contain '.'. We return substring between them
-            // ParentId MAY NOT have hierarchical structure and we don't know if initially rootId was started with '|',
-            // so we must NOT include first '|' to allow mixed hierarchical and non-hierarchical request id scenarios
-            int rootEnd = id.IndexOf('.');
-            if (rootEnd < 0)
-            {
-                rootEnd = id.Length;
-            }
-
-            int rootStart = id[0] == '|' ? 1 : 0;
-            return id.Substring(rootStart, rootEnd - rootStart);
         }
 
         #region IDisposable Support

@@ -2,6 +2,7 @@
 {
     using Microsoft.ApplicationInsights;
     using Microsoft.ApplicationInsights.DataContracts;
+    using Microsoft.ApplicationInsights.ServiceFabric.Module;
     using Microsoft.ServiceFabric.Services.Remoting.V1;
     using Microsoft.ServiceFabric.Services.Remoting.V1.Client;
     using System;
@@ -21,7 +22,6 @@
     internal class CorrelatingServiceRemotingClient : IServiceRemotingClient, IWrappingClient
     {
         private Uri serviceUri;
-        private Lazy<DataContractSerializer> baggageSerializer;
         private TelemetryClient telemetryClient;
         private IMethodNameProvider methodNameProvider;
 
@@ -45,7 +45,6 @@
 
             this.InnerClient = innerClient;
             this.serviceUri = serviceUri;
-            this.baggageSerializer = new Lazy<DataContractSerializer>(() => new DataContractSerializer(typeof(IEnumerable<KeyValuePair<string, string>>)));
             this.telemetryClient = new TelemetryClient();
             this.methodNameProvider = methodNameProvider;
         }
@@ -133,17 +132,10 @@
                 {
                     messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
 
-                    // We expect the baggage to not be there at all or just contain a few small items
-                    Activity currentActivity = Activity.Current;
-                    if (currentActivity.Baggage.Any())
+                    byte[] baggageFromActivity = RequestTrackingUtils.GetBaggageFromActivity();
+                    if (baggageFromActivity != null)
                     {
-                        using (var ms = new MemoryStream())
-                        {
-                            var dictionaryWriter = XmlDictionaryWriter.CreateBinaryWriter(ms);
-                            this.baggageSerializer.Value.WriteObject(dictionaryWriter, currentActivity.Baggage);
-                            dictionaryWriter.Flush();
-                            messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, ms.GetBuffer());
-                        }
+                        messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, baggageFromActivity);
                     }
                 }
 
