@@ -11,7 +11,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
     /// <summary>
     /// Telemetry module tracking requests using service remoting.
     /// </summary>
-    public class ServiceRemotingRequestTrackingTelemetryModule : ITelemetryModule
+    public class ServiceRemotingRequestTrackingTelemetryModule : ITelemetryModule, IDisposable
     {
         private ServiceRemotingServerEventListener _serviceRemotingServerEventListener;
         private bool _correlationHeadersEnabled = true;
@@ -57,9 +57,6 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         {
             _telemetryClient = new TelemetryClient(configuration);
 
-            // Todo (nizarq): Do we need this?
-            //_telemetryClient.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("web:");
-
             if (configuration != null && configuration.TelemetryChannel != null)
             {
                 _telemetryChannelEnpoint = configuration.TelemetryChannel.EndpointAddress;
@@ -70,5 +67,37 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                                 this.EffectiveProfileQueryEndpoint,
                                 this.SetComponentCorrelationHttpHeaders);
         }
+
+        #region IDisposable Support
+        private bool disposedValue = false; // To detect redundant calls
+
+        /// <summary>
+        /// Disposes the object.
+        /// </summary>
+        /// <param name="disposing">Provides the mechanism to detect redundant calls.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    _serviceRemotingServerEventListener.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        // This code added to correctly implement the disposable pattern.
+        /// <summary>
+        /// Disposes the object.
+        /// </summary>
+        public void Dispose()
+        {
+            // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
+            Dispose(true);
+        }
+        #endregion
+
     }
 }

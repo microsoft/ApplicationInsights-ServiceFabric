@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using System.Xml;
 using Microsoft.ApplicationInsights.Extensibility.Implementation.Tracing;
 using System.Collections.Concurrent;
+using Microsoft.ApplicationInsights.Extensibility.Implementation;
 
 namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 {
@@ -26,6 +27,8 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         public ServiceRemotingServerEventListener(TelemetryConfiguration configuration, string effectiveProfileQueryEndpoint, bool setComponentCorrelationHttpHeaders, ICorrelationIdLookupHelper correlationIdLookupHelper = null)
         {
             this.client = new TelemetryClient(configuration);
+            this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("serviceremoting:");
+
             this.configuration = configuration;
             this.effectiveProfileQueryEndpoint = effectiveProfileQueryEndpoint;
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;

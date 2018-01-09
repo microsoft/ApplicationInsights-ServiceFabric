@@ -27,6 +27,11 @@
     </dependencies>
   </metadata>
   <files>
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.config.transform" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.config.install.xdt" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.config.uninstall.xdt" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\Install.ps1" target="tools" />
+
     <!-- For .NET 4.5 projects -->
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\Net45\Microsoft.AI.ServiceFabric.Native.dll" target="lib\net45" />
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\Net45\Microsoft.AI.ServiceFabric.Native.pdb" target="lib\net45" />

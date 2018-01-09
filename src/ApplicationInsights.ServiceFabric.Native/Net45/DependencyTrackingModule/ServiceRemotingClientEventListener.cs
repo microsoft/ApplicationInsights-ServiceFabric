@@ -39,7 +39,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
             ICorrelationIdLookupHelper correlationIdLookupHelper = null)
         {
             this.client = new TelemetryClient(configuration);
-            this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rdddc:"); // Todo (nizarq): rdddc represents remote dependency based on diagnostic source. Do we need to change that.
+            this.client.Context.GetInternalContext().SdkVersion = SdkVersionUtils.GetSdkVersion("rddsr:");
 
             this.configuration = configuration;
             this.setComponentCorrelationHttpHeaders = setComponentCorrelationHttpHeaders;
@@ -79,7 +79,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 // Weird case, just use the numerical id as the method name
                 if (string.IsNullOrEmpty(methodName))
                 {
-                    methodName = messageHeaders.MethodId.ToString();
+                    methodName = messageHeaders.MethodId.ToString(CultureInfo.InvariantCulture);
                 }
 
                 // Call StartOperation, this will create a new activity with the current activity being the parent.
