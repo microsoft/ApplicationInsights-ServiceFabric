@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 {
-    internal class RequestResponseHeaders
+    internal class ServiceRemotingConstants
     {
         /// <summary>
         /// Request-Context header.
@@ -29,19 +29,23 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         public const string RequestContextSourceRoleNameKey = "roleName";
 
         /// <summary>
-        /// Target-RoleName key in the request context header that is added to the response and retrieved by the calling application when processing incoming responses.
+        /// Parent Id header name
         /// </summary>
-        public const string RequestContextTargetRoleNameKey = "roleName"; // Although the name of Source and Target key is the same - roleName. Conceptually they are different and hence, we intentionally have two constants here. Makes for better reading of the code.
+        public const string ParentIdHeaderName = "Microsoft.ApplicationInsights.ServiceFabric.ParentId";
 
         /// <summary>
-        /// Legacy parent Id header.
+        /// Correlation context header name.
         /// </summary>
-        public const string StandardParentIdHeader = "x-ms-request-id";
+        public const string CorrelationContextHeaderName = "Microsoft.ApplicationInsights.ServiceFabric.CorrelationContext";
 
         /// <summary>
-        /// Legacy root id header.
+        /// Dependency type value for service remoting dependency.
         /// </summary>
-        public const string StandardRootIdHeader = "x-ms-request-root-id";
+        public const string ServiceRemotingTypeName = "ServiceFabricServiceRemoting";
 
+        /// <summary>
+        /// Dependency type value for service remoting calls made across AI components.
+        /// </summary>
+        public const string ServiceRemotingTypeNameTracked = "ServiceFabricServiceRemoting (tracked component)";
     }
 }

@@ -52,32 +52,32 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         #region Request-Context (used for x-component correlation among other things) utility methods 
         internal static string GetRequestContextKeyValue(IServiceRemotingRequestMessageHeader headers, string keyName)
         {
-            return GetHeaderKeyValue(new ServiceRemotingRequestHeaderWrapper(headers), RequestResponseHeaders.RequestContextHeader, keyName);
+            return GetHeaderKeyValue(new ServiceRemotingRequestHeaderWrapper(headers), ServiceRemotingConstants.RequestContextHeader, keyName);
         }
 
         internal static bool ContainsRequestContextKeyValue(IServiceRemotingRequestMessageHeader headers, string keyName)
         {
-            return ContainsHeaderKeyValue(new ServiceRemotingRequestHeaderWrapper(headers), RequestResponseHeaders.RequestContextHeader, keyName);
+            return ContainsHeaderKeyValue(new ServiceRemotingRequestHeaderWrapper(headers), ServiceRemotingConstants.RequestContextHeader, keyName);
         }
 
         internal static void SetRequestContextKeyValue(IServiceRemotingRequestMessageHeader headers, string keyName, string keyValue)
         {
-            SetHeaderKeyValue(new ServiceRemotingRequestHeaderWrapper(headers), RequestResponseHeaders.RequestContextHeader, keyName, keyValue);
+            SetHeaderKeyValue(new ServiceRemotingRequestHeaderWrapper(headers), ServiceRemotingConstants.RequestContextHeader, keyName, keyValue);
         }
 
         internal static string GetRequestContextKeyValue(IServiceRemotingResponseMessageHeader headers, string keyName)
         {
-            return GetHeaderKeyValue(new ServiceRemotingResponseHeaderWrapper(headers), RequestResponseHeaders.RequestContextHeader, keyName);
+            return GetHeaderKeyValue(new ServiceRemotingResponseHeaderWrapper(headers), ServiceRemotingConstants.RequestContextHeader, keyName);
         }
 
         internal static bool ContainsRequestContextKeyValue(IServiceRemotingResponseMessageHeader headers, string keyName)
         {
-            return ContainsHeaderKeyValue(new ServiceRemotingResponseHeaderWrapper(headers), RequestResponseHeaders.RequestContextHeader, keyName);
+            return ContainsHeaderKeyValue(new ServiceRemotingResponseHeaderWrapper(headers), ServiceRemotingConstants.RequestContextHeader, keyName);
         }
 
         internal static void SetRequestContextKeyValue(IServiceRemotingResponseMessageHeader headers, string keyName, string keyValue)
         {
-            SetHeaderKeyValue(new ServiceRemotingResponseHeaderWrapper(headers), RequestResponseHeaders.RequestContextHeader, keyName, keyValue);
+            SetHeaderKeyValue(new ServiceRemotingResponseHeaderWrapper(headers), ServiceRemotingConstants.RequestContextHeader, keyName, keyValue);
         }
         #endregion
 

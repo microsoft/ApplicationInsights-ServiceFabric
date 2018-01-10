@@ -121,21 +121,21 @@
             // Since service remoting doesn't really have an URL like HTTP URL, we will do our best approximate that for
             // the Name, Type, Data, and Target properties
             var operation = telemetryClient.StartOperation<DependencyTelemetry>(methodName);
-            operation.Telemetry.Type = ServiceRemotingLoggingStrings.ServiceRemotingTypeName;
+            operation.Telemetry.Type = ServiceRemotingConstants.ServiceRemotingTypeName;
             operation.Telemetry.Data = this.serviceUri.AbsoluteUri + "/" + methodName;
             operation.Telemetry.Target = this.serviceUri.AbsoluteUri;
 
             try
             {
-                if (!messageHeaders.ContainsHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName) &&
-                    !messageHeaders.ContainsHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName))
+                if (!messageHeaders.ContainsHeader(ServiceRemotingConstants.ParentIdHeaderName) &&
+                    !messageHeaders.ContainsHeader(ServiceRemotingConstants.CorrelationContextHeaderName))
                 {
-                    messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
+                    messageHeaders.AddHeader(ServiceRemotingConstants.ParentIdHeaderName, operation.Telemetry.Id);
 
                     byte[] baggageFromActivity = RequestTrackingUtils.GetBaggageFromActivity();
                     if (baggageFromActivity != null)
                     {
-                        messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, baggageFromActivity);
+                        messageHeaders.AddHeader(ServiceRemotingConstants.CorrelationContextHeaderName, baggageFromActivity);
                     }
                 }
 

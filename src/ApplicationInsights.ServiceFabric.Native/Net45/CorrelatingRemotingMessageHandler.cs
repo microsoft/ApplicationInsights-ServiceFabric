@@ -98,7 +98,7 @@
             // Create and prepare activity and RequestTelemetry objects to track this request.
             RequestTelemetry rt = new RequestTelemetry();
 
-            string parentId = messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out parentId) ? parentId : null;
+            messageHeaders.TryGetHeaderValue(ServiceRemotingConstants.ParentIdHeaderName, out string parentId);
 
             // Do our best effort in setting the request name.
             string methodName = null;
@@ -124,14 +124,17 @@
                 }
             }
 
-            byte[] correlationBytes = messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out correlationBytes) ? correlationBytes : null;
-
-            RequestTrackingUtils.UpdateTelemetryBasedOnCorrelationContext(rt, methodName, parentId, correlationBytes);
+            byte[] correlationBytes = messageHeaders.TryGetHeaderValue(ServiceRemotingConstants.CorrelationContextHeaderName, out correlationBytes) ? correlationBytes : null;
+            var baggage = RequestTrackingUtils.DeserializeBaggage(correlationBytes);
+            
+            RequestTrackingUtils.UpdateTelemetryBasedOnCorrelationContext(rt, methodName, parentId, baggage);
 
             // Call StartOperation, this will create a new activity with the current activity being the parent.
             // Since service remoting doesn't really have an URL like HTTP URL, we will do our best approximate that for
             // the Name, Type, Data, and Target properties
             var operation = telemetryClient.StartOperation<RequestTelemetry>(rt);
+
+            RequestTrackingUtils.UpdateCurrentActivityBaggage(baggage);
 
             try
             {

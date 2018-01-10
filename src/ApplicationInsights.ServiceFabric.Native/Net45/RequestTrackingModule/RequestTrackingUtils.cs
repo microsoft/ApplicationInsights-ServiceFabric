@@ -24,8 +24,8 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         /// <param name="rt">Telemetry object.</param>
         /// <param name="methodName">method name for the request telemetry.</param>
         /// <param name="parentId">Correlation parent Id.</param>
-        /// <param name="correlationBytes">Correlation property bag as byte array.</param>
-        public static void UpdateTelemetryBasedOnCorrelationContext(RequestTelemetry rt, string methodName, string parentId, byte[] correlationBytes)
+        /// <param name="baggage">Correlation property bag.</param>
+        public static void UpdateTelemetryBasedOnCorrelationContext(RequestTelemetry rt, string methodName, string parentId, IEnumerable<KeyValuePair<string, string>> baggage)
         {
             if (!string.IsNullOrEmpty(parentId))
             {
@@ -35,14 +35,29 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 
             rt.Name = methodName;
 
-            if (correlationBytes != null)
+            if (baggage != null)
             {
-                var baggageBytesStream = new MemoryStream(correlationBytes, writable: false);
-                var dictionaryReader = XmlDictionaryReader.CreateBinaryReader(baggageBytesStream, XmlDictionaryReaderQuotas.Max);
-                var baggage = _baggageSerializer.ReadObject(dictionaryReader) as IEnumerable<KeyValuePair<string, string>>;
                 foreach (KeyValuePair<string, string> pair in baggage)
                 {
-                    rt.Context.Properties.Add(pair.Key, pair.Value);
+                    if (!rt.Context.Properties.ContainsKey(pair.Key))
+                    {
+                        rt.Context.Properties.Add(pair.Key, pair.Value);
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Adds baggage to the current activity
+        /// </summary>
+        /// <param name="baggage"></param>
+        public static void UpdateCurrentActivityBaggage(IEnumerable<KeyValuePair<string, string>> baggage)
+        {
+            if (baggage != null)
+            {
+                foreach (KeyValuePair<string, string> pair in baggage)
+                {
+                    Activity.Current.AddBaggage(pair.Key, pair.Value);
                 }
             }
         }
@@ -66,6 +81,25 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 }
             }
             return null;
+        }
+
+        /// <summary>
+        /// Coverts the correlation baggage from serialized bytes to 
+        /// </summary>
+        /// <param name="correlationBytes">Baggage properties serialized as bytes</param>
+        /// <returns>Deserialized properties.</returns>
+        public static IEnumerable<KeyValuePair<string,string>> DeserializeBaggage(byte[] correlationBytes)
+        {
+            if (correlationBytes != null)
+            {
+                using (var baggageBytesStream = new MemoryStream(correlationBytes, writable: false))
+                {
+                    var dictionaryReader = XmlDictionaryReader.CreateBinaryReader(baggageBytesStream, XmlDictionaryReaderQuotas.Max);
+                    return _baggageSerializer.ReadObject(dictionaryReader) as IEnumerable<KeyValuePair<string, string>>;
+                }
+            }
+
+            return Enumerable.Empty<KeyValuePair<string, string>>();
         }
 
         /// <summary>

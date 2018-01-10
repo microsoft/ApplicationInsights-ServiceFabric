@@ -28,7 +28,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         private readonly ICorrelationIdLookupHelper correlationIdLookupHelper;
         private readonly TelemetryClient client;
         private readonly TelemetryConfiguration configuration;
-        private ConcurrentDictionary<IServiceRemotingRequestMessage, IOperationHolder<DependencyTelemetry>> pendingTelemetry = new ConcurrentDictionary<IServiceRemotingRequestMessage, IOperationHolder<DependencyTelemetry>>();
+        private CacheBasedOperationHolder<DependencyTelemetry> pendingTelemetry = new CacheBasedOperationHolder<DependencyTelemetry>("aisfsdksrdependencies", 100 * 1000);
 
 
         public ServiceRemotingClientEventListener(
@@ -86,20 +86,20 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 // Since service remoting doesn't really have an URL like HTTP URL, we will do our best approximate that for
                 // the Name, Type, Data, and Target properties
                 var operation = client.StartOperation<DependencyTelemetry>(methodName);
-                operation.Telemetry.Type = ServiceRemotingLoggingStrings.ServiceRemotingTypeName;
+                operation.Telemetry.Type = ServiceRemotingConstants.ServiceRemotingTypeName;
                 operation.Telemetry.Data = serviceUri.AbsoluteUri + "/" + methodName;
                 operation.Telemetry.Target = serviceUri.AbsoluteUri;
 
-                pendingTelemetry[request] = operation;
+                pendingTelemetry.Store(request, operation);
 
-                if (!messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.ParentIdHeaderName, out byte[] parentIdHeaderValue) &&
-                    !messageHeaders.TryGetHeaderValue(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, out byte[] correlationContextHeaderValue))
+                if (!messageHeaders.TryGetHeaderValue(ServiceRemotingConstants.ParentIdHeaderName, out byte[] parentIdHeaderValue) &&
+                    !messageHeaders.TryGetHeaderValue(ServiceRemotingConstants.CorrelationContextHeaderName, out byte[] correlationContextHeaderValue))
                 {
-                    messageHeaders.AddHeader(ServiceRemotingLoggingStrings.ParentIdHeaderName, operation.Telemetry.Id);
+                    messageHeaders.AddHeader(ServiceRemotingConstants.ParentIdHeaderName, operation.Telemetry.Id);
                     byte[] baggageFromActivity = RequestTrackingUtils.GetBaggageFromActivity();
                     if (baggageFromActivity != null)
                     {
-                        messageHeaders.AddHeader(ServiceRemotingLoggingStrings.CorrelationContextHeaderName, baggageFromActivity);
+                        messageHeaders.AddHeader(ServiceRemotingConstants.CorrelationContextHeaderName, baggageFromActivity);
                     }
                }
 
@@ -139,10 +139,12 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                     return;
                 }
 
-                IOperationHolder<DependencyTelemetry> dependencyOperation;
-                if (pendingTelemetry.TryGetValue(request, out dependencyOperation))
+                IOperationHolder<DependencyTelemetry> dependencyOperation = pendingTelemetry.Get(request);
+                if (dependencyOperation != null)
                 {
-                    // As of now, are not encapsulated by the platform in IServiceRemotingResponseMessage. Hence we only deal with x-compnent headers in the case of successful call.
+                    pendingTelemetry.Remove(request);
+
+                    // As of now, we are not encapsulated by the platform in IServiceRemotingResponseMessage. Hence we only deal with x-compnent headers in the case of successful call.
                     if (requestStateSuccessful)
                     {
                         UpdateTelemetryBasedOnXComponentResponseHeaders(successfulResponseArg.Response, dependencyOperation.Telemetry);
@@ -170,7 +172,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 
             try
             {
-                string targetApplicationId = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(response.GetHeader(), RequestResponseHeaders.RequestContextCorrelationTargetKey);
+                string targetApplicationId = ServiceRemotingHeaderUtilities.GetRequestContextKeyValue(response.GetHeader(), ServiceRemotingConstants.RequestContextCorrelationTargetKey);
                 if (!string.IsNullOrEmpty(targetApplicationId) && !string.IsNullOrEmpty(dependencyTelemetry.Context.InstrumentationKey))
                 {
                     // We only add the cross component correlation key if the key does not represent the current component.
@@ -178,7 +180,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                     if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(dependencyTelemetry.Context.InstrumentationKey, out sourceApplicationId) &&
                         targetApplicationId != sourceApplicationId)
                     {
-                        dependencyTelemetry.Type = ServiceRemotingLoggingStrings.ServiceRemotingTypeNameTracked;
+                        dependencyTelemetry.Type = ServiceRemotingConstants.ServiceRemotingTypeNameTracked;
                         dependencyTelemetry.Target += " | " + targetApplicationId;
                     }
                 }
@@ -198,12 +200,12 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 {
                     try
                     {
-                        if (!string.IsNullOrEmpty(instrumentationKey) && !ServiceRemotingHeaderUtilities.ContainsRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey))
+                        if (!string.IsNullOrEmpty(instrumentationKey) && !ServiceRemotingHeaderUtilities.ContainsRequestContextKeyValue(requestHeaders, ServiceRemotingConstants.RequestContextCorrelationSourceKey))
                         {
                             string sourceApplicationId;
                             if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(instrumentationKey, out sourceApplicationId))
                             {
-                                ServiceRemotingHeaderUtilities.SetRequestContextKeyValue(requestHeaders, RequestResponseHeaders.RequestContextCorrelationSourceKey, sourceApplicationId);
+                                ServiceRemotingHeaderUtilities.SetRequestContextKeyValue(requestHeaders, ServiceRemotingConstants.RequestContextCorrelationSourceKey, sourceApplicationId);
                             }
                         }
                     }
@@ -231,7 +233,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 {
                     ServiceRemotingClientEvents.SendRequest -= ServiceRemotingClientEvents_SendRequest;
                     ServiceRemotingClientEvents.ReceiveResponse -= ServiceRemotingClientEvents_ReceiveResponse;
-
+                    pendingTelemetry.Dispose();
                 }
 
                 disposedValue = true;

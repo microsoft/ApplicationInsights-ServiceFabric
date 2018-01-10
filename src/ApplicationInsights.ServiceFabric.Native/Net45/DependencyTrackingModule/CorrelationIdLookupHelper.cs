@@ -22,7 +22,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
 
         private const string AppIdQueryApiRelativeUriFormat = "api/profiles/{0}/appId";
 
-        // We have arbitrarily chosen 5 second delay between trying to get app Id once we get a failure while trying to get it. 
+        // We have arbitrarily chosen 30 second delay between trying to get app Id once we get a failure while trying to get it. 
         // This is to throttle tries between failures to safeguard against performance hits. The impact would be that telemetry generated during this interval would not have x-component correlation id.
         private readonly TimeSpan intervalBetweenFailedRetries = TimeSpan.FromSeconds(30);
 
@@ -256,18 +256,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                 this.failingInstrumenationKeys[instrumentationKey] = new FailedResult(DateTime.UtcNow);
             }
 
-            ServiceFabricSDKEventSource.Log.FetchAppIdFailed(this.GetExceptionDetailString(ex));
-        }
-
-        private string GetExceptionDetailString(Exception ex)
-        {
-            var ae = ex as AggregateException;
-            if (ae != null)
-            {
-                return ae.Flatten().InnerException.ToInvariantString();
-            }
-
-            return ex.ToInvariantString();
+            ServiceFabricSDKEventSource.Log.FetchAppIdFailed(ExceptionUtilities.GetExceptionDetailString(ex));
         }
 
         /// <summary>
