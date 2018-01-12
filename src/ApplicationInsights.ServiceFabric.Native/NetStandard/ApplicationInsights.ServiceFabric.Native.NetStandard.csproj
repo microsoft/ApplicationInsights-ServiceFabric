@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>Microsoft.AI.ServiceFabric.Native</AssemblyName>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>InternalKey.snk</AssemblyOriginatorKeyFile>
+    <DelaySign>true</DelaySign>
+	<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
+    <RootNamespace>Microsoft.ApplicationInsights.ServiceFabric</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+    <DefineConstants>$(DefineConstants);NETCORE</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>D:\git\ApplicationInsights-ServiceFabric\src\ApplicationInsights.ServiceFabric.Native\NetStandard\Microsoft.AI.ServiceFabric.Native.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MicroBuild.Core" Version="0.2.0">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.4.0" />
+    <PackageReference Include="Microsoft.ServiceFabric.Actors" Version="3.1.3" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.1.3" />
+    <PackageReference Include="System.Runtime.Caching" Version="4.5.0-preview1-25914-04" />
+  </ItemGroup>
+
+  <Import Project="..\..\ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems" Label="Shared" />
+
+  <Import Project="..\..\ApplicationInsights.ServiceFabric.Native.Shared\ApplicationInsights.ServiceFabric.Native.Shared.projitems" Label="Shared" />
+
+<!--  <Import Project="..\ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems" Label="Shared" /> -->
+
+</Project>
