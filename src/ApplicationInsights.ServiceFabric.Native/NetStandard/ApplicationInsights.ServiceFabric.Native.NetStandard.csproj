@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>D:\git\ApplicationInsights-ServiceFabric\src\ApplicationInsights.ServiceFabric.Native\NetStandard\Microsoft.AI.ServiceFabric.Native.xml</DocumentationFile>
+    <DocumentationFile>Microsoft.AI.ServiceFabric.Native.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +34,5 @@
   <Import Project="..\..\ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems" Label="Shared" />
 
   <Import Project="..\..\ApplicationInsights.ServiceFabric.Native.Shared\ApplicationInsights.ServiceFabric.Native.Shared.projitems" Label="Shared" />
-
-<!--  <Import Project="..\ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems" Label="Shared" /> -->
 
 </Project>
