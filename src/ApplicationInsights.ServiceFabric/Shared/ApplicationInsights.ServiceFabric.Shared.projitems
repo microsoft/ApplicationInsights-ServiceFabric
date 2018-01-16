@@ -9,6 +9,7 @@
     <Import_RootNamespace>ApplicationInsights.ServiceFabric.Shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)CallContext.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FabricTelemetryInitializer.cs" />
   </ItemGroup>
 </Project>

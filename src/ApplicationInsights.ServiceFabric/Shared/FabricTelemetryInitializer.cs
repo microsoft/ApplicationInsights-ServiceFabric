@@ -5,7 +5,7 @@
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
 
-#if !NETCORE
+#if NET45
     using System.Runtime.Remoting.Messaging;
 #endif
 
@@ -26,17 +26,12 @@
         {
             get
             {
-#if NETCORE
-                return null;
-#else
-
                 if (this.contextCollection != null && this.contextCollection.Count > 0)
                 {
                     return this.contextCollection;
                 }
 
                 return CallContext.LogicalGetData(ServiceContextKeyName) as Dictionary<string, string>;
-#endif
             }
         }
 
