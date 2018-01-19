@@ -47,5 +47,10 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         /// Dependency type value for service remoting calls made across AI components.
         /// </summary>
         public const string ServiceRemotingTypeNameTracked = "ServiceFabricServiceRemoting (tracked component)";
+
+        /// <summary>
+        /// Response codes do not apply to service fabric, but are mandatory fields in application insights. We will use the following string as the response code.
+        /// </summary>
+        public const string NotApplicableResponseCode = "Not Applicable";
     }
 }

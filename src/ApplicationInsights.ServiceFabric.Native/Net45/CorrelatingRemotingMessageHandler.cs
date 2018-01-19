@@ -96,7 +96,7 @@
         private async Task<byte[]> HandleAndTrackRequestAsync(ServiceRemotingMessageHeaders messageHeaders, Func<Task<byte[]>> doHandleRequest)
         {
             // Create and prepare activity and RequestTelemetry objects to track this request.
-            RequestTelemetry rt = new RequestTelemetry();
+            RequestTelemetry rt = new RequestTelemetry() { ResponseCode = ServiceRemotingConstants.NotApplicableResponseCode };
 
             messageHeaders.TryGetHeaderValue(ServiceRemotingConstants.ParentIdHeaderName, out string parentId);
 

@@ -175,6 +175,11 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                     pendingTelemetry.Remove(request);
 
                     requestOperation.Telemetry.Success = requestStateSuccessful;
+
+                    // Response code is a required field. But isn't applicable in service remoting.
+                    // If we don't set it to anything the track call will set it to 200.
+                    requestOperation.Telemetry.ResponseCode = ServiceRemotingConstants.NotApplicableResponseCode;
+                                        
                     client.StopOperation(requestOperation);
                 }
 

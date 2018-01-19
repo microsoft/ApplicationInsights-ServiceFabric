@@ -327,6 +327,11 @@
             Dependency type value for service remoting calls made across AI components.
             </summary>
         </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.NotApplicableResponseCode">
+            <summary>
+            Response codes do not apply to service fabric, but are mandatory fields in application insights. We will use the following string as the response code.
+            </summary>
+        </member>
         <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.RequestTrackingUtils">
             <summary>
             Util methods to share some implemetation across service remoting V1 and V2.
