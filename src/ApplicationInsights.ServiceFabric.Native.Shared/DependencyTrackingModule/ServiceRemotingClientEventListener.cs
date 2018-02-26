@@ -179,7 +179,6 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
                     if (this.correlationIdLookupHelper.TryGetXComponentCorrelationId(dependencyTelemetry.Context.InstrumentationKey, out sourceApplicationId) &&
                         targetApplicationId != sourceApplicationId)
                     {
-                        dependencyTelemetry.Type = ServiceRemotingConstants.ServiceRemotingTypeNameTracked;
                         dependencyTelemetry.Target += " | " + targetApplicationId;
                     }
                 }
