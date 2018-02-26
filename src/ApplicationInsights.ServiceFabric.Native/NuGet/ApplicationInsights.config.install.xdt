@@ -1,0 +1,6 @@
+<ApplicationInsights xmlns="http://schemas.microsoft.com/ApplicationInsights/2013/Settings" xmlns:xdt="http://schemas.microsoft.com/XML-Document-Transform">
+  <TelemetryModules xdt:Transform="InsertIfMissing">
+    <Add xdt:Transform="InsertIfMissing" xdt:Locator="Match(Type)" Type="Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule, Microsoft.AI.ServiceFabric.Native"/>
+    <Add xdt:Transform="InsertIfMissing" xdt:Locator="Match(Type)" Type="Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule, Microsoft.AI.ServiceFabric.Native"/>
+  </TelemetryModules>
+</ApplicationInsights>

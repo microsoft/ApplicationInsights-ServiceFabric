@@ -1,0 +1,444 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Microsoft.AI.ServiceFabric.Native</name>
+    </assembly>
+    <members>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.CallContext">
+            <summary>
+            .Net core does not have a CallContext implementation. So we are wrapping async local and providing an alternative implementation.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.CallContext.LogicalSetData(System.String,System.Object)">
+            <summary>
+            Stores the given object as an async local object in our collection.
+            </summary>
+            <param name="name">The call context name.</param>
+            <param name="data">The object to store.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.CallContext.LogicalGetData(System.String)">
+            <summary>
+            Retrieves the object stored against the given name.
+            </summary>
+            <param name="name">The name against which item was stored.</param>
+            <returns>The object retrieved.</returns>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer">
+            <summary>
+            Telemetry initializer for service fabric. Adds service fabric specific context to outgoing telemetry.
+            </summary>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.ApplicableServiceContext">
+            <summary>
+            There are a few ways the context could be provided. This property makes it easy for the rest of the implemenatation to ignore all those cases. 
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.#ctor">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer"/> class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.#ctor(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer"/> class.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.Initialize(Microsoft.ApplicationInsights.Channel.ITelemetry)">
+            <summary>
+            Adds service fabric context fields on the given telemetry object.
+            </summary>
+            <param name="telemetry">The telemetry item being sent through the AI sdk.</param>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1.memoryCache">
+            <summary>
+            The memory cache instance used to hold items. MemoryCache.Default is not used as it is shared 
+            across application and can potentially collide with customer application.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1.cacheItemPolicy">
+            <summary>
+            The cache item policy which identifies the expiration time.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1.#ctor(System.String,System.Int64)">
+            <summary>
+            Creates an object of type <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1"/>
+            </summary>
+            <param name="cacheName">Identifier for the cache.</param>
+            <param name="expirationInMilliSecs">Expiration time in miliseconds.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1.Get(Microsoft.ServiceFabric.Services.Remoting.V2.IServiceRemotingRequestMessage)">
+            <summary>
+            Gets the IOperationHolder object against the given key.
+            </summary>
+            <param name="key">The request against which the operation holder is stored.</param>
+            <returns>The operation holder against the key. Null if not found.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1.Remove(Microsoft.ServiceFabric.Services.Remoting.V2.IServiceRemotingRequestMessage)">
+            <summary>
+            Removes the entry for the given request.
+            </summary>
+            <param name="key">The request against which the operation holder is stored.</param>
+            <returns>True if able to remove, false otherwise.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1.Store(Microsoft.ServiceFabric.Services.Remoting.V2.IServiceRemotingRequestMessage,Microsoft.ApplicationInsights.Extensibility.IOperationHolder{`0})">
+            <summary>
+            Adds operationHold in MemoryCache. DO NOT call it for the request that already exists in the cache.
+            This is a known Memory Cache race-condition issue when items with same id are added concurrently
+            and MemoryCache leaks memory. It should be fixed sometime AFTER .NET 4.7.1.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.MAXSIZE">
+            <summary>
+            Max number of app ids to cache.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.#ctor(System.Func{System.String,System.Threading.Tasks.Task{System.String}})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper" /> class mostly to be used by the test classes to provide an override for fetching appId logic.
+            </summary>
+            <param name="appIdProviderMethod">The delegate to be called to fetch the appId.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.#ctor(System.Collections.Generic.Dictionary{System.String,System.String})">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper" /> class mostly to be used by the test classes to seed the instrumentation key -> app Id relationship.
+            </summary>
+            <param name="mapSeed">A dictionary that contains known instrumentation key - app id relationship.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.#ctor(System.String)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper" /> class.
+            </summary>
+            <param name="endpointAddress">Endpoint that is to be used to fetch appId.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.TryGetXComponentCorrelationId(System.String,System.String@)">
+            <summary>
+            Retrieves the correlation id corresponding to a given instrumentation key.
+            </summary>
+            <param name="instrumentationKey">Instrumentation key string.</param>
+            <param name="correlationId">AppId corresponding to the provided instrumentation key.</param>
+            <returns>true if correlationId was successfully retrieved; false otherwise.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.IsFetchAppInProgress(System.String)">
+            <summary>
+            This method is purely a test helper at this point. It checks whether the task to get app ID is still running.
+            </summary>
+            <returns>True if fetch task is still in progress, false otherwise.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FetchAppIdFromService(System.String)">
+            <summary>
+            Retrieves the app id given the instrumentation key.
+            </summary>
+            <param name="instrumentationKey">Instrumentation key for which app id is to be retrieved.</param>
+            <returns>App id.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.GetAppIdEndPointUri(System.String)">
+            <summary>
+            Strips off any relative path at the end of the base URI and then appends the known relative path to get the app id uri.
+            </summary>
+            <param name="instrumentationKey">AI resource's instrumentation key.</param>
+            <returns>Computed Uri.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.RegisterFailure(System.String,System.Exception)">
+            <summary>
+            Registers failure for further action in future.
+            </summary>
+            <param name="instrumentationKey">Instrumentation key for which the failure occurred.</param>
+            <param name="ex">Exception indicating failure.</param>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult">
+            <summary>
+            Structure that represents a failed fetch app Id call.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult.#ctor(System.DateTime,System.Net.HttpStatusCode)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult" /> class.
+            </summary>
+            <param name="failureTime">Time when the failure occurred.</param>
+            <param name="failureCode">Failure response code.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult.#ctor(System.DateTime)">
+            <summary>
+            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult" /> class.
+            </summary>
+            <param name="failureTime">Time when the failure occurred.</param>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult.FailureTime">
+            <summary>
+            Gets the time of failure.
+            </summary>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult.FailureCode">
+            <summary>
+            Gets the integer value for response code representing the type of failure.
+            </summary>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.Module.CorrelationIdLookupHelper.FailedResult.ShouldRetry">
+            <summary>
+            Gets a value indicating whether the failure is likely to go away when a retry happens.
+            </summary>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.ExceptionUtilities">
+            <summary>
+            Utility functions for dealing with exceptions.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ExceptionUtilities.GetExceptionDetailString(System.Exception)">
+            <summary>
+            Get the string representation of this Exception with special handling for AggregateExceptions.
+            </summary>
+            <param name="ex">The exception to convert to a string.</param>
+            <returns>The detailed string version of the provided exception.</returns>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.ICorrelationIdLookupHelper">
+            <summary>
+            An interface for getting a correlation id from a provided instrumentation key.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ICorrelationIdLookupHelper.TryGetXComponentCorrelationId(System.String,System.String@)">
+            <summary>
+            Retrieves the correlation id corresponding to a given instrumentation key.
+            </summary>
+            <param name="instrumentationKey">Instrumentation key string.</param>
+            <param name="correlationId">AppId corresponding to the provided instrumentation key.</param>
+            <returns>true if correlationId was successfully retrieved; false otherwise.</returns>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.Keywords">
+            <summary>
+            Keywords for the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceFabricSDKEventSource"/>.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.Keywords.UserActionable">
+            <summary>
+            Key word for user actionable events.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.Keywords.Diagnostics">
+            <summary>
+            Key word for diagnostics events.
+            </summary>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule">
+            <summary>
+            Telemetry module tracking requests using service remoting.
+            </summary>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule.SetComponentCorrelationHttpHeaders">
+            <summary>
+            Gets or sets a value indicating whether the component correlation headers would be set on service remoting responses.
+            </summary>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule.ProfileQueryEndpoint">
+            <summary>
+            Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule.Initialize(Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration)">
+            <summary>
+            Initializes the telemetry module.
+            </summary>
+            <param name="configuration">Telemetry configuration to use for initialization.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule.Dispose(System.Boolean)">
+            <summary>
+            Disposes the object.
+            </summary>
+            <param name="disposing">Provides the mechanism to detect redundant calls.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule.Dispose">
+            <summary>
+            Disposes the object.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingHeaderUtilities.UpdateHeaderWithKeyValue(System.Collections.Generic.IEnumerable{System.String},System.String,System.String)">
+            <summary>
+            Given the provided list of header value strings, return a list of key name/value pairs
+            with the provided keyName and keyValue. If the initial header value strings contains
+            the key name, then the original key value should be replaced with the provided key
+            value. If the initial header value strings don't contain the key name, then the key
+            name/value pair should be added to the list and returned.
+            </summary>
+            <param name="headerValues">The existing header values that the key/value pair should be added to.</param>
+            <param name="keyName">The name of the key to add.</param>
+            <param name="keyValue">The value of the key to add.</param>
+            <returns>The result of setting the provided key name/value pair into the provided headerValues.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingHeaderUtilities.GetHeaderKeyValue(System.Collections.Generic.IEnumerable{System.String},System.String)">
+            <summary>
+            Get the key value from the provided HttpHeader value that is set up as a comma-separated list of key value pairs. Each key value pair is formatted like (key)=(value).
+            </summary>
+            <param name="headerValues">The header values that may contain key name/value pairs.</param>
+            <param name="keyName">The name of the key value to find in the provided header values.</param>
+            <returns>The first key value, if it is found. If it is not found, then null.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingHeaderUtilities.IServiceRemotingMessageHeaderCollection.AddHeader(System.String,System.String)">
+            <summary>
+            
+            </summary>
+            <param name="headerName"></param>
+            <param name="headerValue"></param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingHeaderUtilities.IServiceRemotingMessageHeaderCollection.TryGetHeaderValue(System.String,System.String@)">
+            <summary>
+            
+            </summary>
+            <param name="headerName"></param>
+            <param name="headerValue"></param>
+            <returns></returns>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.RequestContextHeader">
+            <summary>
+            Request-Context header.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.RequestContextCorrelationSourceKey">
+            <summary>
+            Source key in the request context header that is added by an application while making http requests and retrieved by the other application when processing incoming requests.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.RequestContextCorrelationTargetKey">
+            <summary>
+            Target key in the request context header that is added to the response and retrieved by the calling application when processing incoming responses.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.RequestContextSourceRoleNameKey">
+            <summary>
+            Source-RoleName key in the request context header that is added by an application while making http requests and retrieved by the other application when processing incoming requests.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.ParentIdHeaderName">
+            <summary>
+            Parent Id header name
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.CorrelationContextHeaderName">
+            <summary>
+            Correlation context header name.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.ServiceRemotingTypeName">
+            <summary>
+            Dependency type value for service remoting dependency.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingConstants.NotApplicableResponseCode">
+            <summary>
+            Response codes do not apply to service fabric, but are mandatory fields in application insights. We will use the following string as the response code.
+            </summary>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.RequestTrackingUtils">
+            <summary>
+            Util methods to share some implemetation across service remoting V1 and V2.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.RequestTrackingUtils.UpdateTelemetryBasedOnCorrelationContext(Microsoft.ApplicationInsights.DataContracts.RequestTelemetry,System.String,System.String,System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})">
+            <summary>
+            Updates the given telemetry object with the provided methodName, parentId and property bag
+            </summary>
+            <param name="rt">Telemetry object.</param>
+            <param name="methodName">method name for the request telemetry.</param>
+            <param name="parentId">Correlation parent Id.</param>
+            <param name="baggage">Correlation property bag.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.RequestTrackingUtils.UpdateCurrentActivityBaggage(System.Collections.Generic.IEnumerable{System.Collections.Generic.KeyValuePair{System.String,System.String}})">
+            <summary>
+            Adds baggage to the current activity
+            </summary>
+            <param name="baggage"></param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.RequestTrackingUtils.GetBaggageFromActivity">
+            <summary>
+            Gets the property bag from the current activity.
+            </summary>
+            <returns>Property bag as a byte array. Null if no property bag is found.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.RequestTrackingUtils.DeserializeBaggage(System.Byte[])">
+            <summary>
+            Coverts the correlation baggage from serialized bytes to 
+            </summary>
+            <param name="correlationBytes">Baggage properties serialized as bytes</param>
+            <returns>Deserialized properties.</returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.RequestTrackingUtils.GetOperationId(System.String)">
+            <summary>
+            Gets the operation Id from the request Id: substring between '|' and first '.'.
+            </summary>
+            <param name="id">Id to get the operation id from.</param>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule">
+            <summary>
+            Telemetry module tracking requests using service remoting.
+            </summary>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule.SetComponentCorrelationHttpHeaders">
+            <summary>
+            Gets or sets a value indicating whether the component correlation headers would be set on service remoting responses.
+            </summary>
+        </member>
+        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule.ProfileQueryEndpoint">
+            <summary>
+            Gets or sets the endpoint that is to be used to get the application insights resource's profile (appId etc.).
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule.Initialize(Microsoft.ApplicationInsights.Extensibility.TelemetryConfiguration)">
+            <summary>
+            Initializes the telemetry module.
+            </summary>
+            <param name="configuration">Telemetry configuration to use for initialization.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule.Dispose(System.Boolean)">
+            <summary>
+            Disposes the object.
+            </summary>
+            <param name="disposing">Provides the mechanism to detect redundant calls.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule.Dispose">
+            <summary>
+            Disposes the object.
+            </summary>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.CodePackageVersionTelemetryInitializer">
+            <summary>
+            A telemetry initializer that will set component version based on the code package version of a Service Fabric Reliable Service.
+            </summary>
+        </member>
+        <member name="F:Microsoft.ApplicationInsights.ServiceFabric.CodePackageVersionTelemetryInitializer.codePackageVersion">
+            <summary>
+            The code package version for this component.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.CodePackageVersionTelemetryInitializer.Initialize(Microsoft.ApplicationInsights.Channel.ITelemetry)">
+            <summary>
+            Initializes component version of the telemetry item with the code package version from the Service Fabric runtime activation context.
+            </summary>
+            <param name="telemetry">The telemetry context to initialize.</param>
+        </member>
+        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializerExtension">
+            <summary>
+            Provides extended functionality related to the ServiceFabricTelemetryInitializer specifically targetted at Service Fabric Native applications.
+            </summary>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializerExtension.CreateFabricTelemetryInitializer(System.Fabric.ServiceContext)">
+            <summary>
+            Creates an instance of the FabricTelemetryInitializer based on the Service Context passed in.
+            </summary>
+            <param name="context">a service context object.</param>
+            <returns></returns>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializerExtension.SetServiceCallContext(System.Fabric.ServiceContext)">
+            <summary>
+            This static method is a helper method that anyone can invoke to set the call context.
+            This provides a way for the user to add a single line of code at the entry point and get collected telemetry augmented with service fabric specific fields.
+            </summary>
+            <param name="context">A service context object.</param>
+        </member>
+        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializerExtension.GetContextContractDictionaryFromServiceContext(System.Fabric.ServiceContext)">
+            <summary>
+            Converts the context object to the loose dictionary based contract this initializer depends on for data.
+            </summary>
+            <param name="context">An object of type <see cref="T:System.Fabric.ServiceContext" />.</param>
+            <returns>A dictionary that encapsulates the given context.</returns>
+        </member>
+    </members>
+</doc>

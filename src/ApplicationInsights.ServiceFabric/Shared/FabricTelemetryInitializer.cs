@@ -5,7 +5,7 @@
     using Microsoft.ApplicationInsights.Channel;
     using Microsoft.ApplicationInsights.Extensibility;
 
-#if !NETCORE
+#if NET45
     using System.Runtime.Remoting.Messaging;
 #endif
 
@@ -26,17 +26,12 @@
         {
             get
             {
-#if NETCORE
-                return null;
-#else
-
                 if (this.contextCollection != null && this.contextCollection.Count > 0)
                 {
                     return this.contextCollection;
                 }
 
                 return CallContext.LogicalGetData(ServiceContextKeyName) as Dictionary<string, string>;
-#endif
             }
         }
 
@@ -63,9 +58,10 @@
         {
             try
             {
-                if (this.ApplicableServiceContext != null)
+                var serviceContext = this.ApplicableServiceContext;
+                if (serviceContext != null)
                 {
-                    foreach (var field in this.ApplicableServiceContext)
+                    foreach (var field in serviceContext)
                     {
                         if (!telemetry.Context.Properties.ContainsKey(field.Key))
                         {
@@ -73,19 +69,19 @@
                         }
                     }
 
-                    if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName) && this.ApplicableServiceContext.ContainsKey(KnownContextFieldNames.ServiceName))
+                    if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName) && serviceContext.ContainsKey(KnownContextFieldNames.ServiceName))
                     {
-                        telemetry.Context.Cloud.RoleName = this.ApplicableServiceContext[KnownContextFieldNames.ServiceName];
+                        telemetry.Context.Cloud.RoleName = serviceContext[KnownContextFieldNames.ServiceName];
                     }
                     if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
                     {
-                        if (this.ApplicableServiceContext.ContainsKey(KnownContextFieldNames.InstanceId))
+                        if (serviceContext.ContainsKey(KnownContextFieldNames.InstanceId))
                         {
-                            telemetry.Context.Cloud.RoleInstance = this.ApplicableServiceContext[KnownContextFieldNames.InstanceId];
+                            telemetry.Context.Cloud.RoleInstance = serviceContext[KnownContextFieldNames.InstanceId];
                         }
-                        else if (this.ApplicableServiceContext.ContainsKey(KnownContextFieldNames.ReplicaId))
+                        else if (serviceContext.ContainsKey(KnownContextFieldNames.ReplicaId))
                         {
-                            telemetry.Context.Cloud.RoleInstance = this.ApplicableServiceContext[KnownContextFieldNames.ReplicaId];
+                            telemetry.Context.Cloud.RoleInstance = serviceContext[KnownContextFieldNames.ReplicaId];
                         }
                     }
                 }

@@ -3,8 +3,11 @@
     using System.Collections.Generic;
     using System.Fabric;
     using System.Globalization;
-    using System.Runtime.Remoting.Messaging;
     using Microsoft.ApplicationInsights.Extensibility;
+
+#if NET45
+    using System.Runtime.Remoting.Messaging;
+#endif
 
     /// <summary>
     /// Provides extended functionality related to the ServiceFabricTelemetryInitializer specifically targetted at Service Fabric Native applications.
