@@ -1,0 +1,28 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>60f081cc-d6cd-48f1-a6e9-b6e5587af9d9</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>ApplicationInsights.ServiceFabric.Native.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)CacheBasedOperationHolder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CodePackageVersionTelemetryInitializer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\CorrelationIdLookupHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\ExceptionUtilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\ICorrelationIdLookupHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\SdkVersionUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\ServiceFabricSDKEventSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\ServiceRemotingClientEventListener.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\ServiceRemotingDependencyTrackingTelemetryModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DependencyTrackingModule\ServiceRemotingHeaderUtilities.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FabricTelemetryInitializerExtension.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RequestResponseHeaders.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RequestTrackingModule\RequestTrackingUtils.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RequestTrackingModule\ServiceRemotingRequestTrackingTelemetryModule.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RequestTrackingModule\ServiceRemotingServerEventListener.cs" />
+  </ItemGroup>
+</Project>

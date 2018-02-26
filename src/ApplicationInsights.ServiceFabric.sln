@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.Service
 		{A14C1A81-A954-45EB-B985-D14A109233F6} = {A14C1A81-A954-45EB-B985-D14A109233F6}
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.NetStandard", "ApplicationInsights.ServiceFabric\NetStandard\ApplicationInsights.ServiceFabric.NetStandard.csproj", "{A14C1A81-A954-45EB-B985-D14A109233F6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationInsights.ServiceFabric.NetStandard", "ApplicationInsights.ServiceFabric\NetStandard\ApplicationInsights.ServiceFabric.NetStandard.csproj", "{A14C1A81-A954-45EB-B985-D14A109233F6}"
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ApplicationInsights.ServiceFabric.Shared", "ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.shproj", "{782AB255-A812-4517-9BA7-191EDEBC0938}"
 EndProject
@@ -22,10 +22,16 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.Service
 		{D58E6722-7F75-43F2-B04A-30F5A571ED28} = {D58E6722-7F75-43F2-B04A-30F5A571ED28}
 	EndProjectSection
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationInsights.ServiceFabric.Native.NetStandard", "ApplicationInsights.ServiceFabric.Native\NetStandard\ApplicationInsights.ServiceFabric.Native.NetStandard.csproj", "{AE9702EC-D77E-49E7-8837-C00EAFA07397}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "ApplicationInsights.ServiceFabric.Native.Shared", "ApplicationInsights.ServiceFabric.Native.Shared\ApplicationInsights.ServiceFabric.Native.Shared.shproj", "{60F081CC-D6CD-48F1-A6E9-B6E5587AF9D9}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems*{00a7f547-e1d1-48b7-a5a5-0a5e061f9fc1}*SharedItemsImports = 4
+		ApplicationInsights.ServiceFabric.Native.Shared\ApplicationInsights.ServiceFabric.Native.Shared.projitems*{60f081cc-d6cd-48f1-a6e9-b6e5587af9d9}*SharedItemsImports = 13
 		ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems*{782ab255-a812-4517-9ba7-191edebc0938}*SharedItemsImports = 13
+		ApplicationInsights.ServiceFabric.Native.Shared\ApplicationInsights.ServiceFabric.Native.Shared.projitems*{d58e6722-7f75-43f2-b04a-30f5a571ed28}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Mixed Platforms = Debug|Mixed Platforms
@@ -44,16 +50,23 @@ Global
 		{A14C1A81-A954-45EB-B985-D14A109233F6}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
 		{A14C1A81-A954-45EB-B985-D14A109233F6}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{A14C1A81-A954-45EB-B985-D14A109233F6}.Release|Mixed Platforms.Build.0 = Release|Any CPU
-		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
-		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Debug|Mixed Platforms.Build.0 = Debug|x64
-		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Release|Mixed Platforms.ActiveCfg = Release|x64
-		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Release|Mixed Platforms.Build.0 = Release|x64
-		{820D2E4F-4D2F-463F-A1B3-778526936820}.Debug|Mixed Platforms.ActiveCfg = Debug|x64
-		{820D2E4F-4D2F-463F-A1B3-778526936820}.Debug|Mixed Platforms.Build.0 = Debug|x64
-		{820D2E4F-4D2F-463F-A1B3-778526936820}.Release|Mixed Platforms.ActiveCfg = Release|x64
-		{820D2E4F-4D2F-463F-A1B3-778526936820}.Release|Mixed Platforms.Build.0 = Release|x64
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{D58E6722-7F75-43F2-B04A-30F5A571ED28}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{820D2E4F-4D2F-463F-A1B3-778526936820}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{AE9702EC-D77E-49E7-8837-C00EAFA07397}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{AE9702EC-D77E-49E7-8837-C00EAFA07397}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{AE9702EC-D77E-49E7-8837-C00EAFA07397}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{AE9702EC-D77E-49E7-8837-C00EAFA07397}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {EE087372-F0AD-407E-9478-70B275F4C560}
 	EndGlobalSection
 EndGlobal

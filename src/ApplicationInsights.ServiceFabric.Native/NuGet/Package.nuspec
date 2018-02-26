@@ -19,15 +19,35 @@
     <dependencies>
       <group targetFramework="net45">
         <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
-        <dependency id="Microsoft.ServiceFabric" version="6.0.0" />
-        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="2.8.0" />
+        <dependency id="Microsoft.ServiceFabric" version="6.1.467" />
+        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="3.0.467" />
+        <dependency id="System.Diagnostics.DiagnosticSource" version="4.4.0" />
         <dependency id="Microsoft.ApplicationInsights.ServiceFabric" version="$version$"/>
+      </group>
+      <group targetFramework="netstandard2.0">
+        <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
+        <!-- Todo: The following dependency versions are not real. We need to update them before we merge to develop. We need to wait till the changes made in service fabric have made it to public nuget packages. -->
+        <dependency id="Microsoft.ServiceFabric" version="6.1.467" />
+        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="3.0.467" />
+        <dependency id="System.Diagnostics.DiagnosticSource" version="4.4.0" />
+        <dependency id="Microsoft.ApplicationInsights.ServiceFabric" version="$version$"/>
+        <dependency id="System.Runtime.Caching" version="[4.5.0-preview1-25914-04,)"/>
       </group>
     </dependencies>
   </metadata>
   <files>
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.config.transform" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.config.install.xdt" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.config.uninstall.xdt" target="content" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NuGet\Install.ps1" target="tools" />
+
     <!-- For .NET 4.5 projects -->
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\Net45\Microsoft.AI.ServiceFabric.Native.dll" target="lib\net45" />
     <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\Net45\Microsoft.AI.ServiceFabric.Native.pdb" target="lib\net45" />
+
+    <!-- For .NET Standard 2.0 projects -->
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NetStandard\netstandard2.0\Microsoft.AI.ServiceFabric.Native.dll" target="lib\netstandard2.0" />
+    <file src="$configuration$\src\ApplicationInsights.ServiceFabric.Native\NetStandard\netstandard2.0\Microsoft.AI.ServiceFabric.Native.pdb" target="lib\netstandard2.0" />
+
   </files>
 </package>
