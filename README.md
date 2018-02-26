@@ -14,8 +14,8 @@ This repo provides code for a telemetry initializer (and some associated utility
 
 ## Nuget Packages
 This repository produces the following two nuget packages:
-* [**Microsoft.ApplicationInsights.ServiceFabric.Native**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric.Native/2.0.1-beta1) - For use with Service Fabric's [native reliable services](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-introduction).
-* [**Microsoft.ApplicationInsights.ServiceFabric**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric/2.0.1-beta1) - For use with [Guest Executable](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-deploy-existing-app) and [Guest container](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-containers-overview) services (lift and shift scenarios).
+* [**Microsoft.ApplicationInsights.ServiceFabric.Native**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric.Native) - For use with Service Fabric's [native reliable services](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-introduction).
+* [**Microsoft.ApplicationInsights.ServiceFabric**](https://www.nuget.org/packages/Microsoft.ApplicationInsights.ServiceFabric) - For use with [Guest Executable](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-deploy-existing-app) and [Guest container](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-containers-overview) services (lift and shift scenarios).
 
 ## Scope
 * This repository and the associated nuget packages, for now, only deals with `.Net Framework` and `.Net Core` applications.
@@ -140,6 +140,32 @@ The context added looks like:
 
 ### Trace Correlation with Service Remoting
 The Nuget package enables correlation of traces produced by Service Fabric services, regardless whether services communicate via HTTP or via Service Remoting protocol. For HttpClient, the correlation is supported implicitly. For Service Remoting, you just need to make some minor changes to your existing code and the correlation will be supported.
+
+There is a difference in initialization depending on whether you are using Remoting V2 stack or not. You can follow this page to [upgrade from Remoting V1 to Remoting V2](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-communication-remoting#how-to-upgrade-from-remoting-v1-to-remoting-v2).
+
+#### Remoting V2
+Once you are using Remoting V2, you just need to add two more telemetry modules to your project.
+
+For .Net Framework, the modules will be added automatically to the ApplicationInsights.config when you install the nuget package:
+```
+<TelemetryModules>
+    <Add Type="Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingRequestTrackingTelemetryModule, Microsoft.AI.ServiceFabric.Native"/>
+    <Add Type="Microsoft.ApplicationInsights.ServiceFabric.Module.ServiceRemotingDependencyTrackingTelemetryModule, Microsoft.AI.ServiceFabric.Native"/>
+</TelemetryModules>
+```
+
+For .Net Core, add the modules at the same place where you add the telemetry initializer:
+```
+ConfigureServices(services => services
+    ...
+    .AddSingleton<ITelemetryModule>(new ServiceRemotingDependencyTrackingTelemetryModule())
+    .AddSingleton<ITelemetryModule>(new ServiceRemotingRequestTrackingTelemetryModule())
+)
+```
+
+#### Remoting V1
+If you want to stick to Remoting V1 stack, you can alternatively change your code to use the correlating proxy and message handler.
+
 1. For the service invoking the request, change how the proxy is created:
     ```
     // IStatelessBackendService proxy = ServiceProxy.Create<IStatelessBackendService>(new Uri(serviceUri));
