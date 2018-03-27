@@ -143,6 +143,8 @@ The Nuget package enables correlation of traces produced by Service Fabric servi
 
 There is a difference in initialization depending on whether you are using Remoting V2 stack or not. You can follow this page to [upgrade from Remoting V1 to Remoting V2](https://docs.microsoft.com/en-us/azure/service-fabric/service-fabric-reliable-services-communication-remoting#how-to-upgrade-from-remoting-v1-to-remoting-v2).
 
+**Note:** The V2 attribute name is different for Reliable Services and Actors. i.e., `FabricTransportServiceRemotingProvider` and `FabricTransportActorRemotingProvider`.
+
 #### Remoting V2
 Once you are using Remoting V2, you just need to add two more telemetry modules to your project.
 
