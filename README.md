@@ -54,25 +54,23 @@ In order to have requests and dependencies showing in Application Insights Live 
 <ApplicationInsights xmlns="http://schemas.microsoft.com/ApplicationInsights/2013/Settings">
   <InstrumentationKey>...</InstrumentationKey>
   <TelemetryInitializers>
-    <!-- other initializers ... -->
+    <Add Type="Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer, Microsoft.AI.ServiceFabric"/>      
     <Add Type="ApplicationInsights.OwinExtensions.OperationIdTelemetryInitializer, ApplicationInsights.OwinExtensions"/>
     <Add Type="Microsoft.ApplicationInsights.ServiceFabric.CodePackageVersionTelemetryInitializer, Microsoft.AI.ServiceFabric.Native"/>
   
-  <!-- In order to collect dependencies include this and the nuget package Microsoft.ApplicationInsights.DependencyCollector -->
-  <Add Type="Microsoft.ApplicationInsights.DependencyCollector.HttpDependenciesParsingTelemetryInitializer, Microsoft.AI.DependencyCollector"/>
+    <!-- In order to collect dependencies include this and the nuget package Microsoft.ApplicationInsights.DependencyCollector -->
+    <Add Type="Microsoft.ApplicationInsights.DependencyCollector.HttpDependenciesParsingTelemetryInitializer, Microsoft.AI.DependencyCollector"/>
   </TelemetryInitializers>
   <TelemetryModules>
     <!-- In order to collect dependencies include this and the nuget package Microsoft.ApplicationInsights.DependencyCollector -->
-    <Add Type="Microsoft.ApplicationInsights.DependencyCollector.DependencyTrackingTelemetryModule, Microsoft.AI.DependencyCollector"/>
-    <Add Type="Microsoft.ApplicationInsights.DependencyCollector.HttpDependenciesParsingTelemetryInitializer, Microsoft.AI.DependencyCollector"/>
+    <Add Type="Microsoft.ApplicationInsights.DependencyCollector.DependencyTrackingTelemetryModule, Microsoft.AI.DependencyCollector"/>    
     
     <!--  In order to collect performance/request information include this and the nuget package Microsoft.ApplicationInsights.PerfCounterCollector -->
     <Add Type="Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.PerformanceCollectorModule, Microsoft.AI.PerfCounterCollector"/>
-    <Add Type="Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse.QuickPulseTelemetryModule, Microsoft.AI.PerfCounterCollector"/>
-        
-    <Add Type="Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer, Microsoft.AI.ServiceFabric"/>      
+    <Add Type="Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse.QuickPulseTelemetryModule, Microsoft.AI.PerfCounterCollector"/>    
   </TelemetryModules>
   <TelemetryProcessors>
+    <!-- Adds support to live stream -->
     <Add Type="Microsoft.ApplicationInsights.Extensibility.PerfCounterCollector.QuickPulse.QuickPulseTelemetryProcessor, Microsoft.AI.PerfCounterCollector"/>
   </TelemetryProcessors>
 </ApplicationInsights>
