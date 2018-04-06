@@ -75,6 +75,7 @@ In order to have requests and dependencies showing in Application Insights Live 
   </TelemetryProcessors>
 </ApplicationInsights>
 ```
+For more information [check this post](http://apmtips.com/blog/2017/02/13/enable-application-insights-live-metrics-from-code)
  
 ### .Net Core
 The AI .Net Core SDK's configuration model is quite different from .Net framework's AI SDK. Almost all configuration for .NET Core is done in code. For example the AI SDK for ASP.net Core provides UseApplicationInsights() utility method that lets you set things up in code. When using the service fabric specific nuget package, simply make sure to register the ServiceFabricTelemetryInitializer through dependency injection before calling UseApplicationInsights() method as shown below: 
