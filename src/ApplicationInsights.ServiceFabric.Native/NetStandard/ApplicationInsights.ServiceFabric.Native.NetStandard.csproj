@@ -1,12 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\..\ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems" Label="Shared" />
+  <Import Project="..\..\ApplicationInsights.ServiceFabric.Native.Shared\ApplicationInsights.ServiceFabric.Native.Shared.projitems" Label="Shared" />
+  <Import Project="$([MSBuild]::GetDirectoryNameOfFileAbove('$(MSBuildThisFileDirectory)\..', 'Product.props'))\Product.props" />
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <!-- Disale code analysis because of this issue: https://github.com/dotnet/roslyn-analyzers/issues/1313 -->
+    <RunCodeAnalysis>false</RunCodeAnalysis>
     <AssemblyName>Microsoft.AI.ServiceFabric.Native</AssemblyName>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>InternalKey.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>35MSSharedLib1024.snk</AssemblyOriginatorKeyFile>
     <DelaySign>true</DelaySign>
-	<GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
+    <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <RootNamespace>Microsoft.ApplicationInsights.ServiceFabric</RootNamespace>
   </PropertyGroup>
@@ -30,9 +33,4 @@
     <!-- We should keep an eye for this to become public. This dependency provides a .net core ported version of MemoryCache. The port has happened recently. -->
     <PackageReference Include="System.Runtime.Caching" Version="4.5.0-preview1-25914-04" />
   </ItemGroup>
-
-  <Import Project="..\..\ApplicationInsights.ServiceFabric\Shared\ApplicationInsights.ServiceFabric.Shared.projitems" Label="Shared" />
-
-  <Import Project="..\..\ApplicationInsights.ServiceFabric.Native.Shared\ApplicationInsights.ServiceFabric.Native.Shared.projitems" Label="Shared" />
-
 </Project>
