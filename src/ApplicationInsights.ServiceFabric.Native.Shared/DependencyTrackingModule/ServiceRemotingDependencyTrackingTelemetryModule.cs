@@ -18,6 +18,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         private bool _correlationHeadersEnabled = true;
         private string _telemetryChannelEnpoint;
         private TelemetryClient _telemetryClient;
+        private bool _isInitialized = false;
 
         /// <summary>
         /// Gets or sets a value indicating whether the component correlation headers would be set on service remoting responses.
@@ -56,6 +57,13 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         /// <param name="configuration">Telemetry configuration to use for initialization.</param>
         public void Initialize(TelemetryConfiguration configuration)
         {
+            // Prevent the telemetry module from being initialized multiple times.
+            // A serious side effect of multiple initialization is the Service Remoting events could be registered multiple times, which will break the correlation.
+            if (_isInitialized) {
+                return;
+            }
+            _isInitialized = true;
+
             _telemetryClient = new TelemetryClient(configuration);
 
             if (configuration != null && configuration.TelemetryChannel != null)
