@@ -21,7 +21,7 @@
             {
                 try
                 {
-                    Type actorMessageHeadersType = typeof(ActorMethodDispatcherBase).Assembly.GetType("Microsoft.ServiceFabric.Actors.Remoting.ActorMessageHeaders");
+                    Type actorMessageHeadersType = typeof(ActorMethodDispatcherBase).Assembly.GetType("Microsoft.ServiceFabric.Actors.Remoting.V1.ActorMessageHeaders");
                     MethodInfo method = actorMessageHeadersType?.GetMethod("Deserialize", BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
 
                     if (method != null)
