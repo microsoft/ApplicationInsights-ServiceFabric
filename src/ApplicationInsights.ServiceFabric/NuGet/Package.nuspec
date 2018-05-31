@@ -18,10 +18,10 @@
     <tags>Analytics ApplicationInsights Telemetry AppInsights ServiceFabric Fabric</tags>
     <dependencies>
       <group targetFramework="net45">
-        <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
+        <dependency id="Microsoft.ApplicationInsights" version="[2.4,3)" />
       </group>
       <group targetFramework="netstandard1.3">
-        <dependency id="Microsoft.ApplicationInsights" version="[2.3,3)" />
+        <dependency id="Microsoft.ApplicationInsights" version="[2.4,3)" />
       </group>
     </dependencies>
   </metadata>

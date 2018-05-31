@@ -70,7 +70,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric.Module
         {
             // We expect the baggage to not be there at all or just contain a few small items
             Activity currentActivity = Activity.Current;
-            if (currentActivity.Baggage.Any())
+            if (currentActivity != null && currentActivity.Baggage != null && currentActivity.Baggage.Any() == true)
             {
                 using (var ms = new MemoryStream())
                 {
