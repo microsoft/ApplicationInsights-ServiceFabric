@@ -10,7 +10,7 @@ namespace Microsoft.ApplicationInsights.ServiceFabric
     /// <summary>
     /// .Net core does not have a CallContext implementation. So we are wrapping async local and providing an alternative implementation.
     /// </summary>
-    internal static class CallContext
+    public static class CallContext
     {
         private static ConcurrentDictionary<string, AsyncLocal<object>> _collection = new ConcurrentDictionary<string, AsyncLocal<object>>();
 

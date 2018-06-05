@@ -20,6 +20,7 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ApplicationInsights.ServiceFabric.Native.NuGet", "ApplicationInsights.ServiceFabric.Native\NuGet\ApplicationInsights.ServiceFabric.Native.NuGet.csproj", "{820D2E4F-4D2F-463F-A1B3-778526936820}"
 	ProjectSection(ProjectDependencies) = postProject
 		{D58E6722-7F75-43F2-B04A-30F5A571ED28} = {D58E6722-7F75-43F2-B04A-30F5A571ED28}
+		{AE9702EC-D77E-49E7-8837-C00EAFA07397} = {AE9702EC-D77E-49E7-8837-C00EAFA07397}
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ApplicationInsights.ServiceFabric.Native.NetStandard", "ApplicationInsights.ServiceFabric.Native\NetStandard\ApplicationInsights.ServiceFabric.Native.NetStandard.csproj", "{AE9702EC-D77E-49E7-8837-C00EAFA07397}"
