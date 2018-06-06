@@ -4,51 +4,6 @@
         <name>Microsoft.AI.ServiceFabric.Native</name>
     </assembly>
     <members>
-        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.CallContext">
-            <summary>
-            .Net core does not have a CallContext implementation. So we are wrapping async local and providing an alternative implementation.
-            </summary>
-        </member>
-        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.CallContext.LogicalSetData(System.String,System.Object)">
-            <summary>
-            Stores the given object as an async local object in our collection.
-            </summary>
-            <param name="name">The call context name.</param>
-            <param name="data">The object to store.</param>
-        </member>
-        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.CallContext.LogicalGetData(System.String)">
-            <summary>
-            Retrieves the object stored against the given name.
-            </summary>
-            <param name="name">The name against which item was stored.</param>
-            <returns>The object retrieved.</returns>
-        </member>
-        <member name="T:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer">
-            <summary>
-            Telemetry initializer for service fabric. Adds service fabric specific context to outgoing telemetry.
-            </summary>
-        </member>
-        <member name="P:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.ApplicableServiceContext">
-            <summary>
-            There are a few ways the context could be provided. This property makes it easy for the rest of the implemenatation to ignore all those cases. 
-            </summary>
-        </member>
-        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.#ctor">
-            <summary>
-            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer"/> class.
-            </summary>
-        </member>
-        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.#ctor(System.Collections.Generic.Dictionary{System.String,System.String})">
-            <summary>
-            Initializes a new instance of the <see cref="T:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer"/> class.
-            </summary>
-        </member>
-        <member name="M:Microsoft.ApplicationInsights.ServiceFabric.FabricTelemetryInitializer.Initialize(Microsoft.ApplicationInsights.Channel.ITelemetry)">
-            <summary>
-            Adds service fabric context fields on the given telemetry object.
-            </summary>
-            <param name="telemetry">The telemetry item being sent through the AI sdk.</param>
-        </member>
         <member name="F:Microsoft.ApplicationInsights.ServiceFabric.Module.CacheBasedOperationHolder`1.memoryCache">
             <summary>
             The memory cache instance used to hold items. MemoryCache.Default is not used as it is shared 
