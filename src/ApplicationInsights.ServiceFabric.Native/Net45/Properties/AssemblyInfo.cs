@@ -9,6 +9,6 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyDescription("Microsoft Application Insights for Service Fabric native applications")]
 [assembly: AssemblyCompany("Microsoft")]
 [assembly: AssemblyProduct("Application Insights for ServiceFabric")]
-[assembly: AssemblyCopyright("Copyright © Microsoft. All Rights Reserved.")]
+[assembly: AssemblyCopyright("© Microsoft Corporation. All rights reserved.")]
 
 [assembly: ComVisible(false)]
