@@ -90,6 +90,11 @@
                 // And for reliable services, when service context is neither provided directly nor through call context
                 if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
                 {
+                    telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServiceName);
+                }
+                
+                if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
+                {
                     telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageName);
                 }
 
@@ -129,6 +134,7 @@
 
         private class KnownEnvironmentVariableName
         {
+            public const string ServiceName = "Fabric_ServiceName";
             public const string ServicePackageName = "Fabric_ServicePackageName";
             public const string ServicePackageInstanceId = "Fabric_ServicePackageInstanceId";
             public const string ServicePackageActivatonId = "Fabric_ServicePackageActivationId";
