@@ -58,6 +58,7 @@
         {
             try
             {
+                // Populate telemetry context properties from the service context object
                 var serviceContext = this.ApplicableServiceContext;
                 if (serviceContext != null)
                 {
@@ -68,54 +69,71 @@
                             telemetry.Context.Properties.Add(field.Key, field.Value);
                         }
                     }
-
-                    if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName) && serviceContext.ContainsKey(KnownContextFieldNames.ServiceName))
-                    {
-                        telemetry.Context.Cloud.RoleName = serviceContext[KnownContextFieldNames.ServiceName];
-                    }
-                    if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
-                    {
-                        if (serviceContext.ContainsKey(KnownContextFieldNames.InstanceId))
-                        {
-                            telemetry.Context.Cloud.RoleInstance = serviceContext[KnownContextFieldNames.InstanceId];
-                        }
-                        else if (serviceContext.ContainsKey(KnownContextFieldNames.ReplicaId))
-                        {
-                            telemetry.Context.Cloud.RoleInstance = serviceContext[KnownContextFieldNames.ReplicaId];
-                        }
-                    }
                 }
 
-                // Fallback to environment variables for setting role / instance names. We will rely on these environment variables exclusively for container lift and shift scenarios for now.
-                // And for reliable services, when service context is neither provided directly nor through call context
+                // Populate telemetry context properties from environment variables, but not overwriting properties
+                // that have been populated from the service context. The environment variables are basically a fallback mechanism.
+                AddPropertyFromEnvironmentVariable(KnownContextFieldNames.ServiceName, KnownEnvironmentVariableName.ServiceName, telemetry);
+                AddPropertyFromEnvironmentVariable(KnownContextFieldNames.NodeName, KnownEnvironmentVariableName.NodeName, telemetry);
+                AddPropertyFromEnvironmentVariable(KnownContextFieldNames.PartitionId, KnownEnvironmentVariableName.PartitionId, telemetry);
+                AddPropertyFromEnvironmentVariable(KnownContextFieldNames.ApplicationName, KnownEnvironmentVariableName.ApplicationName, telemetry);
+
                 if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
                 {
-                    telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServiceName);
-                }
-                
-                if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
-                {
-                    telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageName);
+                    if (telemetry.Context.Properties.ContainsKey(KnownContextFieldNames.ServiceName))
+                    {
+                        telemetry.Context.Cloud.RoleName = telemetry.Context.Properties[KnownContextFieldNames.ServiceName];
+                    }
+
+                    // If we still don't have the role name, fall back to using the service package name as the role name.
+                    // Not quite the same as role name, but better than nothing for differentiating different telemetry datapoint
+                    if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleName))
+                    {
+                        telemetry.Context.Cloud.RoleName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageName);
+                    }
                 }
 
                 if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
                 {
-                    telemetry.Context.Cloud.RoleInstance = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageActivatonId) ?? Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageInstanceId);
-                }
-
-                if (!telemetry.Context.Properties.ContainsKey(KnownContextFieldNames.NodeName))
-                {
-                    string nodeName = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.NodeName);
-
-                    if (!string.IsNullOrEmpty(nodeName))
+                    if (telemetry.Context.Properties.ContainsKey(KnownContextFieldNames.InstanceId))
                     {
-                        telemetry.Context.Properties.Add(KnownContextFieldNames.NodeName, nodeName);
+                        telemetry.Context.Cloud.RoleInstance = telemetry.Context.Properties[KnownContextFieldNames.InstanceId];
+                    }
+                    else if (telemetry.Context.Properties.ContainsKey(KnownContextFieldNames.ReplicaId))
+                    {
+                        telemetry.Context.Cloud.RoleInstance = telemetry.Context.Properties[KnownContextFieldNames.ReplicaId];
+                    }
+
+                    // If we still don't have the role instance name, fall back to using the environment package activation id or service package instance id.
+                    // Not quite the same as role instance id, but better than nothing for differentiating different telemetry datapoint
+                    if (string.IsNullOrEmpty(telemetry.Context.Cloud.RoleInstance))
+                    {
+                        telemetry.Context.Cloud.RoleInstance = Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageActivatonId) ?? Environment.GetEnvironmentVariable(KnownEnvironmentVariableName.ServicePackageInstanceId);
                     }
                 }
             }
             catch
             {
                 // Something went wrong trying to set these extra properties. We shouldn't fail though.
+            }
+        }
+
+        /// <summary>
+        /// Adds the property to the telemetry context, if it doesn't already exist, using the environment variable value. It's a no-op
+        /// if the property with the <paramref name="contextFieldName"/> already exist in the telemetry context.
+        /// </summary>
+        /// <param name="contextFieldName">The name of context field property, as used by Service Fabric. This will be same name used in the telemetry context property dictionary</param>
+        /// <param name="environmentVariableName">The name of the environment variable having the equivalent value</param>
+        /// <param name="telemetry">The telemetry object whose property dictionary will be updated</param>
+        private void AddPropertyFromEnvironmentVariable(string contextFieldName, string environmentVariableName, ITelemetry telemetry)
+        {
+            if (!telemetry.Context.Properties.ContainsKey(contextFieldName))
+            {
+                string value = Environment.GetEnvironmentVariable(environmentVariableName);
+                if (!string.IsNullOrEmpty(value))
+                {
+                    telemetry.Context.Properties.Add(contextFieldName, value);
+                }
             }
         }
 
@@ -132,6 +150,7 @@
             public const string ReplicaId = "ServiceFabric.ReplicaId";
         }
 
+        // Not all of these variables are currently read, but what we know currently are listed so it's easier to find them if we need them in the future
         private class KnownEnvironmentVariableName
         {
             public const string ServiceName = "Fabric_ServiceName";
@@ -139,6 +158,10 @@
             public const string ServicePackageInstanceId = "Fabric_ServicePackageInstanceId";
             public const string ServicePackageActivatonId = "Fabric_ServicePackageActivationId";
             public const string NodeName = "Fabric_NodeName";
+            public const string PartitionId = "Fabric_Id";
+            public const string ApplicationName = "Fabric_ApplicationName";
+            public const string CodePackageName = "Fabric_CodePackageName";
+            public const string ConfigurationIdentifier = "Fabric_Epoch";
         }
     }
 }
