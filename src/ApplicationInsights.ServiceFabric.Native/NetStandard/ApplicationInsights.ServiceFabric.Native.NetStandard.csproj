@@ -26,8 +26,8 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.ApplicationInsights" Version="2.4.0" />
-    <PackageReference Include="Microsoft.ServiceFabric.Actors" Version="3.2.162" />
-    <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.2.162" />
+    <PackageReference Include="Microsoft.ServiceFabric.Actors" Version="3.3.664" />
+    <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.664" />
     
     <!-- We should keep an eye for this to become public. This dependency provides a .net core ported version of MemoryCache. The port has happened recently. -->
     <PackageReference Include="System.Runtime.Caching" Version="4.5.0" />
