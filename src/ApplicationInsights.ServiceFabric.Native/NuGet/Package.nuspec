@@ -6,7 +6,7 @@
     <title>Application Insights Service Fabric Collector for Native Service Fabric Applications</title>
     <authors>$author$</authors>
     <owners>$author$</owners>
-    <licenseUrl>http://go.microsoft.com/fwlink/?LinkID=510709</licenseUrl>
+    <license type="expression">MIT</license>
     <projectUrl>https://github.com/Microsoft/ApplicationInsights-servicefabric</projectUrl>
     <iconUrl>$image$</iconUrl>
     <requireLicenseAcceptance>true</requireLicenseAcceptance>
@@ -19,15 +19,15 @@
     <dependencies>
       <group targetFramework="net45">
         <dependency id="Microsoft.ApplicationInsights" version="[2.4,3)" />
-        <dependency id="Microsoft.ServiceFabric" version="6.3.162" />
-        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="3.2.162" />
+        <dependency id="Microsoft.ServiceFabric" version="6.4.664" />
+        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="3.3.664" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="4.4.0" />
         <dependency id="Microsoft.ApplicationInsights.ServiceFabric" version="$version$"/>
       </group>
       <group targetFramework="netstandard2.0">
         <dependency id="Microsoft.ApplicationInsights" version="[2.4,3)" />
-        <dependency id="Microsoft.ServiceFabric" version="6.3.162" />
-        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="3.2.162" />
+        <dependency id="Microsoft.ServiceFabric" version="6.4.664" />
+        <dependency id="Microsoft.ServiceFabric.Services.Remoting" version="3.3.664" />
         <dependency id="System.Diagnostics.DiagnosticSource" version="4.4.0" />
         <dependency id="Microsoft.ApplicationInsights.ServiceFabric" version="$version$"/>
         <dependency id="System.Runtime.Caching" version="4.5.0"/>
