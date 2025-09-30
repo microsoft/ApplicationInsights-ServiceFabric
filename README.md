@@ -4,6 +4,9 @@
 # Microsoft Application Insights for Service Fabric
 This repository hosts code for functionality that augments Application Insights telemetry experience for Service Fabric. 
 
+> [!IMPORTANT]
+> Application Insights for the Service Fabric SDK is no longer supported.
+
 ## Problem Statement
 [Application Insights](http://azure.microsoft.com/services/application-insights/) is a service that lets you monitor your live application's performance and usage. ApplicationInsight SDKs is a family of nuget packages that lets you collect and send telemetry from your applications. Information about SDKs for different platforms and languages is available at the [Application Insights SDK page](https://github.com/Microsoft/ApplicationInsights-home). 
 
@@ -237,3 +240,4 @@ Please file bugs, discussion or any other interesting topics in [issues](https:/
 ### Developing
 We strongly encourage contributions.   
 This project has adopted the [Microsoft Open Source Code of Conduct](https://opensource.microsoft.com/codeofconduct/). For more information see the [Code of Conduct FAQ](https://opensource.microsoft.com/codeofconduct/faq/) or contact [opencode@microsoft.com](mailto:opencode@microsoft.com) with any additional questions or comments.
+
