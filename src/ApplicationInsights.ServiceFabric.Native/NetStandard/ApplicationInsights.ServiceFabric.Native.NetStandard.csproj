@@ -25,7 +25,7 @@
     <PackageReference Include="MicroBuild.Core" Version="0.2.0">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.4.0" />
+    <PackageReference Include="Microsoft.ApplicationInsights" Version="2.21.0" />
     <PackageReference Include="Microsoft.ServiceFabric.Actors" Version="3.3.664" />
     <PackageReference Include="Microsoft.ServiceFabric.Services.Remoting" Version="3.3.664" />
     
